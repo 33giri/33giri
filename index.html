@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>33Giri — Oggetti di design nati dai vinili</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* ==== COLORI EDITABILI (cambia qui) ==== */
+      --bg:#f5f5f5;           /* sfondo pagina */
+      --text:#0d0d0d;         /* testo principale */
+      --muted:#6d6d6d;        /* testo secondario */
+      --accent:#111111;       /* pulsanti/elementi forti */
+      --accent-2:#ffd84d;     /* evidenziazioni */
+      --card:#ffffff;         /* cards/catalogo */
+      --hero-overlay:rgba(0,0,0,.38); /* velo sullo sfondo dell'hero */
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Urbanist',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+
+    /* ====== NAVBAR ====== */
+    header{position:sticky;top:0;z-index:40;background:rgba(245,245,245,.7);backdrop-filter:saturate(160%) blur(8px);border-bottom:1px solid #e9e9e9}
+    .nav{max-width:1200px;margin:0 auto;display:flex;gap:18px;align-items:center;justify-content:space-between;padding:10px 16px}
+    .brand{font-weight:900;letter-spacing:.5px}
+    .brand span{display:inline-block;transform:skew(-6deg);}
+    .menu{display:flex;gap:16px;align-items:center}
+    .menu a{opacity:.85}
+    .menu a:hover{opacity:1}
+    .cta{background:var(--accent);color:#fff;padding:10px 14px;border-radius:999px;font-weight:700}
+
+    /* ====== HERO ====== */
+    .hero{position:relative;min-height:74vh;display:grid;place-items:center;}
+    .hero::before{content:"";position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1524234107056-1c1f48f64ab7?q=80&w=2400&auto=format&fit=crop') center/cover no-repeat;filter:grayscale(.1) contrast(1.05)}
+    /*  ^^^^^  EDIT: sostituisci l'URL sopra con una tua foto del prodotto full‑bleed */
+    .hero::after{content:"";position:absolute;inset:0;background:var(--hero-overlay)}
+    .hero-inner{position:relative;z-index:1;text-align:center;color:#fff;max-width:1100px;padding:48px 16px}
+    .kicker{display:inline-block;background:var(--accent-2);color:#111;padding:6px 10px;border-radius:999px;font-weight:700;letter-spacing:.4px;margin-bottom:16px}
+    h1{font-size:clamp(28px,6vw,64px);line-height:1.03;margin:8px 0 18px}
+    .lead{font-size:clamp(16px,2.3vw,24px);opacity:.95;margin-bottom:28px}
+    .btn{display:inline-block;background:#fff;color:#111;padding:14px 20px;border-radius:14px;font-weight:800}
+    .btn:hover{transform:translateY(-1px)}
+
+    /* ====== SEZIONI BASE ====== */
+    section{padding:64px 16px}
+    .wrap{max-width:1200px;margin:0 auto}
+    .section-title{font-size:clamp(24px,4.4vw,44px);margin:0 0 18px}
+    .section-sub{color:var(--muted);max-width:850px}
+
+    /* ====== CATALOGO (categorie) ====== */
+    .grid{display:grid;gap:18px}
+    .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(max-width:1024px){.grid.cols-4{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:640px){.grid.cols-4,.grid.cols-3,.grid.cols-2{grid-template-columns:1fr}}
+
+    .card{background:var(--card);border:1px solid #ececec;border-radius:22px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.06);position:relative}
+    .card .thumb{aspect-ratio:4/3;background:linear-gradient(135deg,#f3f3f3,#e5e5e5);display:grid;place-items:center;color:#888;font-weight:700}
+    .card .body{padding:16px 18px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#111;color:#fff;font-size:12px;letter-spacing:.35px}
+
+    /* ====== COLLEZIONE (tutti i vinili) ====== */
+    .prod-card .thumb{aspect-ratio:1/1}
+    .price{font-weight:800}
+
+    /* ====== COLLABORAZIONI TEASER ====== */
+    .teaser{background:linear-gradient( to right, #111 0%, #2a2a2a 60%, #363636 100%);color:#fff;border-radius:24px;overflow:hidden}
+    .teaser-inner{display:flex;gap:28px;align-items:center;justify-content:space-between;padding:32px}
+    .teaser p{opacity:.9}
+
+    /* ====== PAGINA COLLABORAZIONI ====== */
+    #collaborazioni .artist-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:22px}
+    @media(max-width:930px){#collaborazioni .artist-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:640px){#collaborazioni .artist-grid{grid-template-columns:1fr}}
+    .artist-card{background:var(--card);border:1px dashed #cfcfcf;border-radius:18px;overflow:hidden}
+    .artist-card .thumb{aspect-ratio:3/2;background:repeating-linear-gradient(45deg,#fafafa 0 12px,#efefef 12px 24px);display:grid;place-items:center;color:#888;font-weight:700}
+    .artist-card .body{padding:14px 16px}
+
+    /* ====== QUIZ ====== */
+    #quiz .quiz-hero{border-radius:24px;overflow:hidden;position:relative;background:#0e0e0e;color:#fff}
+    #quiz .quiz-hero::before{content:"";position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1519345182560-3f2917c472ef?q=80&w=2200&auto=format&fit=crop') center/cover no-repeat;opacity:.35}
+    /*  ^^^^^  EDIT: sostituisci l'URL sopra con una foto di vinile macro */
+    #quiz .quiz-inner{position:relative;z-index:1;padding:46px 28px;text-align:center}
+    .iframe-wrap{position:relative;padding-top:56.25%;border-radius:16px;overflow:hidden;border:1px solid #e7e7e7;background:#fff}
+    .iframe-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+
+    /* ====== FOOTER ====== */
+    footer{padding:32px 16px;border-top:1px solid #ececec;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="nav">
+      <a class="brand" href="#home"><span>33giri</span></a>
+      <div class="menu">
+        <a href="#catalogo">Catalogo</a>
+        <a href="#quiz">33Quiz</a>
+        <a href="#collaborazioni">Collaborazioni</a>
+        <a class="cta" href="#catalogo">Compra ora</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ===================== HERO ===================== -->
+  <section id="home" class="hero">
+    <div class="hero-inner">
+      <span class="kicker">Fatti a mano • Made in Italy</span>
+      <h1><!-- EDIT: Frase d'effetto -->
+        Oggetti di design nati dai vinili. Dove la musica incontra la forma.
+      </h1>
+      <p class="lead">Ogni pezzo 33Giri è unico: modellato a mano per dare nuova vita alla musica che ha fatto vibrare generazioni.</p>
+      <a class="btn" href="#catalogo">Acquista ora</a>
+    </div>
+  </section>
+
+  <!-- ===================== CATALOGO (CATEGORIE) ===================== -->
+  <section id="catalogo">
+    <div class="wrap">
+      <h2 class="section-title">Catalogo prodotti</h2>
+      <p class="section-sub">Le nostre quattro linee. Clicca per vedere la collezione completa più sotto.</p>
+      <div class="grid cols-4" id="catalog-categories">
+        <!-- Le card sono popolate via JS sotto, cerca // DATA: CATEGORIE -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== COLLEZIONE COMPLETA ===================== -->
+  <section id="collezione">
+    <div class="wrap">
+      <h2 class="section-title">Collezione completa</h2>
+      <p class="section-sub">Tutti i vinili disponibili (puoi aggiungerne/ modificarne l'elenco nel blocco dati).</p>
+      <div class="grid cols-4" id="collection-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TEASER COLLABORAZIONI ===================== -->
+  <section>
+    <div class="wrap teaser">
+      <div class="teaser-inner">
+        <div>
+          <h3 class="section-title" style="margin-bottom:8px;color:#fff">Collaborazioni</h3>
+          <p>Progettiamo pezzi speciali con illustratori e artisti. Scopri le collab e proponi la tua.</p>
+        </div>
+        <a class="btn" href="#collaborazioni">Scopri le collaborazioni</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 33 QUIZ (SEZIONE HOME) ===================== -->
+  <section id="quiz">
+    <div class="wrap">
+      <div class="quiz-hero">
+        <div class="quiz-inner">
+          <h2 class="section-title" style="color:#fff">33Quiz</h2>
+          <p class="section-sub" style="margin:0 auto 18px;color:#e9e9e9">Rispondi a poche domande e scopri quale vinile è perfetto per la tua energia. Alla fine ricevi il match e lo puoi ordinare.</p>
+          <a class="btn" href="#quiz-embed">Fai il quiz</a>
+        </div>
+      </div>
+      <div id="quiz-embed" style="margin-top:22px">
+        <!-- EDIT: Incolla qui l'embed di Typeform/Google Forms. Esempio: -->
+        <!--
+        <div class="iframe-wrap">
+          <iframe src="https://docs.google.com/forms/d/e/ID_DEL_TUO_FORM/viewform?embedded=true"></iframe>
+        </div>
+        -->
+        <div class="iframe-wrap" style="display:grid;place-items:center;color:#666;font-weight:700">
+          <div style="padding:12px">QUI comparirà il quiz una volta incollato l'embed (Typeform / Google Forms)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PAGINA COLLABORAZIONI ===================== -->
+  <section id="collaborazioni">
+    <div class="wrap">
+      <h2 class="section-title">Le nostre collaborazioni</h2>
+      <p class="section-sub">Carica qui immagini e descrizioni dei progetti con gli artisti. Ogni card è modificabile.</p>
+      <div class="artist-grid" id="artist-grid">
+        <!-- Popolato via JS (// DATA: ARTISTI). Puoi anche duplicare manualmente un .artist-card sotto. -->
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap" style="display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap">
+      <div>© 33Giri — fatto a mano in Italia</div>
+      <div style="display:flex;gap:14px">
+        <a href="#catalogo">Catalogo</a>
+        <a href="#quiz">33Quiz</a>
+        <a href="#collaborazioni">Collaborazioni</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ======================================================
+       DATA: CATEGORIE — modifica qui titolo, descrizione e immagini
+       Sostituisci image con il percorso delle tue foto (./assets/...) 
+       ====================================================== */
+    const CATEGORIES = [
+      { key:'standard', title:'Vinile standard', desc:'Senza decorazioni: pura forma e memoria.', image:'https://images.unsplash.com/photo-1513815977113-2088817a49b6?q=80&w=1400&auto=format&fit=crop' },
+      { key:'splash',   title:'Vinile Splash',   desc:'Schizzi di colore a mano, ogni pezzo diverso.', image:'https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1400&auto=format&fit=crop' },
+      { key:'spiral',   title:'Vinile Spiral',   desc:'Spirali dinamiche dipinte a pennello.', image:'https://images.unsplash.com/photo-1541542684-4a63452b09bf?q=80&w=1400&auto=format&fit=crop' },
+      { key:'disegno',  title:'Vinili illustrati',desc:'Collaborazioni con artisti e disegni unici.', image:'https://images.unsplash.com/photo-1526312426976-593c2ebc1f59?q=80&w=1400&auto=format&fit=crop' }
+    ];
+
+    /* ======================================================
+       DATA: COLLEZIONE — esempi. Duplica/edita per aggiungere prodotti
+       price può essere stringa. category deve essere uno dei key sopra.
+       image: sostituisci con le tue foto
+       ====================================================== */
+    const COLLECTION = [
+      { title:'33Giri Modello Standard', price:'€59', category:'standard', image:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1400&auto=format&fit=crop' },
+      { title:'33Giri Modello Splash',   price:'€66', category:'splash',   image:'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1400&auto=format&fit=crop' },
+      { title:'33Giri Modello Spiral',   price:'€66', category:'spiral',   image:'https://images.unsplash.com/photo-1483412033650-1015ddeb83d1?q=80&w=1400&auto=format&fit=crop' },
+      { title:'33Giri Disegno — Iris',   price:'€99', category:'disegno',  image:'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1400&auto=format&fit=crop' }
+    ];
+
+    /* ======================================================
+       DATA: ARTISTI — card per pagina Collaborazioni
+       ====================================================== */
+    const ARTISTS = [
+      { name:'Iris — Trento', role:'Pittrice', image:'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=1400&auto=format&fit=crop', text:'Tonalità vibranti e figure dinamiche. Edizioni limitate su vinile 33Giri.' },
+      { name:'Studio Echo', role:'Illustratori', image:'https://images.unsplash.com/photo-1526312426976-593c2ebc1f59?q=80&w=1400&auto=format&fit=crop', text:'Pattern grafici ispirati a copertine storiche.' },
+      { name:'Linea Mono', role:'Calligrafa', image:'https://images.unsplash.com/photo-1530023367847-a683933f4175?q=80&w=1400&auto=format&fit=crop', text:'Spirali tipografiche e lettering a mano libera.' }
+    ];
+
+    // ===== RENDER CATEGORIE =====
+    const catWrap = document.getElementById('catalog-categories');
+    catWrap.innerHTML = CATEGORIES.map(c=>`
+      <article class="card">
+        <div class="thumb" style="background:url('${c.image}') center/cover no-repeat">
+          <!-- EDIT: sostituisci c.image con la tua foto -->
+        </div>
+        <div class="body">
+          <div class="pill">${c.title}</div>
+          <p style="margin:12px 0 0;color:var(--muted)">${c.desc}</p>
+        </div>
+      </article>
+    `).join('\n');
+
+    // ===== RENDER COLLEZIONE =====
+    const collWrap = document.getElementById('collection-grid');
+    collWrap.innerHTML = COLLECTION.map(p=>`
+      <article class="card prod-card">
+        <div class="thumb" style="background:url('${p.image}') center/cover no-repeat"></div>
+        <div class="body">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <h4 style="margin:0;font-size:18px">${p.title}</h4>
+            <span class="price">${p.price}</span>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
+            <span class="pill" style="background:#222">${p.category}</span>
+            <a class="btn" style="padding:8px 12px" href="#catalogo">Acquista</a>
+          </div>
+        </div>
+      </article>
+    `).join('\n');
+
+    // ===== RENDER ARTISTI =====
+    const artistWrap = document.getElementById('artist-grid');
+    artistWrap.innerHTML = ARTISTS.map(a=>`
+      <article class="artist-card">
+        <div class="thumb" style="background:url('${a.image}') center/cover no-repeat"> <!-- EDIT: immagine artista/progetto --> </div>
+        <div class="body">
+          <h4 style="margin:0 0 6px">${a.name}</h4>
+          <div style="color:var(--muted);font-size:14px;margin-bottom:8px">${a.role}</div>
+          <p style="margin:0">${a.text}</p>
+        </div>
+      </article>
+    `).join('\n');
+
+    // ===== SCROLL SUAVE PER I LINK ANCORA =====
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click',e=>{
+        const id = a.getAttribute('href').slice(1);
+        const el = document.getElementById(id);
+        if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth'}); }
+      });
+    });
+  </script>
+</body>
+</html>
