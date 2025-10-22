@@ -1,72 +1,46 @@
-x<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>33Giri — Oggetti di design nati dai vinili</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;600;800;900&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg1:#f8fafc;
-      --bg2:#e6edf5;
-      --bg3:#dce6ee;
-      --text:#111;
-      --muted:#555;
-      --accent:#000;
-      --accent-2:#ffd84d;
-      --card:#fff;
-      --hero-overlay:rgba(0,0,0,.38);
-    }
-
-    html,body{margin:0;padding:0;font-family:'Urbanist',sans-serif;background:linear-gradient(135deg,var(--bg1),var(--bg2),var(--bg3));color:var(--text)}
-    a{text-decoration:none;color:inherit}
-
-    header{position:sticky;top:0;z-index:40;background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);border-bottom:1px solid #e9e9e9}
-    .nav{max-width:1200px;margin:0 auto;display:flex;gap:18px;align-items:center;justify-content:space-between;padding:10px 16px}
-    .brand{font-weight:900;letter-spacing:.5px}
-    .menu{display:flex;gap:16px;align-items:center}
-    .menu a{opacity:.85}
-    .menu a:hover{opacity:1}
-    .cta{background:var(--accent);color:#fff;padding:10px 14px;border-radius:999px;font-weight:700}
-
-    section{padding:64px 16px;max-width:1200px;margin:auto}
-    .scroll-line{white-space:nowrap;overflow:hidden;position:relative;font-weight:600;font-size:20px;}
-    .scroll-line span{display:inline-block;padding-left:100%;animation:scroll 15s linear infinite;}
-    @keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-100%);}}
-
-    .card{background:var(--card);border-radius:22px;overflow:hidden;box-shadow:0 6px 24px rgba(0,0,0,.06);}
-    .card img{width:100%;display:block;}
-    .card .body{padding:16px}
-  </style>
 </head>
 <body>
   <header>
     <nav class="nav">
-      <a class="brand" href="index.html">33Giri</a>
+      <a href="index.html" class="brand">33Giri</a>
       <div class="menu">
         <a href="catalogo.html">Catalogo</a>
         <a href="quiz.html">33Quiz</a>
         <a href="collaborazioni.html">Collaborazioni</a>
-        <a class="cta" href="catalogo.html">Compra ora</a>
+        <a href="chisiamo.html">Chi siamo</a>
       </div>
     </nav>
   </header>
 
   <main>
-    <section style="text-align:center;margin-top:100px">
-      <h1>“Ogni vinile racconta una storia. Noi la trasformiamo in forma, colore e materia.”</h1>
-      <p style="max-width:700px;margin:20px auto;color:var(--muted);font-size:18px">33Giri dà nuova vita alla musica: design sostenibile, artigianale e carico di emozioni.</p>
+    <section class="hero">
+      <div class="hero-inner">
+        <h1>“Ogni vinile racconta una storia.<br> Noi la trasformiamo in forma, colore e materia.”</h1>
+        <p>33Giri dà nuova vita alla musica: design sostenibile, artigianale e carico di emozioni.</p>
+      </div>
     </section>
 
-    <section style="margin-top:60px">
-      <div class="scroll-line">
-        <span>Crediamo in un design che racconta storie, non mode. — La forma incontra la musica, la musica diventa materia. — Un vinile non si butta: si trasforma. — </span>
+    <section class="scrolling-text">
+      <div class="scroll-container">
+        <p>
+          Crediamo in un design che racconta storie, non mode. — 
+          La forma incontra la musica, la musica diventa materia. — 
+          Un vinile non si butta: si trasforma. — 
+        </p>
       </div>
     </section>
   </main>
 
-  <footer style="text-align:center;padding:32px;color:var(--muted);border-top:1px solid #ccc">© 33Giri — fatto a mano in Italia</footer>
+  <footer>
+    <p>© 33Giri — fatto a mano in Italia</p>
+  </footer>
 </body>
 </html>
