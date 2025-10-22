@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;600;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- NAVBAR STICKY: ora punta a pagine diverse -->
+  <!-- NAV -->
   <header>
     <nav class="nav">
       <a href="index.html" class="brand">33Giri</a>
@@ -21,16 +21,40 @@
     </nav>
   </header>
 
-  <!-- HOMEPAGE MINIMAL: citazione + nastro frasi -->
   <main>
-    <section class="hero">
-      <div class="hero-inner">
-        <h1>“Ogni vinile racconta una storia.<br> Noi la trasformiamo in forma, colore e materia.”</h1>
-        <p>33Giri dà nuova vita alla musica: design sostenibile, artigianale e carico di emozioni.</p>
+    <!-- 1) HERO immagine + headline -->
+    <section class="hero-img">
+      <!-- SOSTITUISCI l'URL con la tua foto full-bleed -->
+      <div class="hero-img-bg" style="--img:url('https://images.unsplash.com/photo-1524234107056-1c1f48f64ab7?q=80&w=2400&auto=format&fit=crop')"></div>
+      <div class="hero-img-overlay"></div>
+      <div class="hero-img-text">
+        <h1>Oggetti di design nati dai vinili.<br>Dove la musica incontra la forma.</h1>
       </div>
     </section>
 
-    <section class="scrolling-text" aria-label="frasi 33Giri">
+    <!-- 2) CATALOGO (4 categorie) -->
+    <section class="section">
+      <div class="wrap">
+        <h2 class="section-title">Collezione Made in Italy</h2>
+        <div class="grid cols-2" id="catalog-categories"></div>
+      </div>
+    </section>
+
+    <!-- 3) CITAZIONE -->
+    <section class="section">
+      <div class="wrap center">
+        <h3 class="quote">
+          “Ogni vinile racconta una storia. Noi la trasformiamo in forma, colore e materia.”
+        </h3>
+        <p class="lead">
+          Ogni pezzo 33Giri è unico, modellato a mano e nato per dare nuova vita alla musica che ha fatto vibrare generazioni.
+        </p>
+        <a class="btn ghost" href="catalogo.html">Acquista ora</a>
+      </div>
+    </section>
+
+    <!-- 4) NASTRO FRASI ORIZZONTALI -->
+    <section class="scrolling-text" aria-label="Frasi 33Giri">
       <div class="scroll-container">
         <p>
           Crediamo in un design che racconta storie, non mode. —
@@ -39,10 +63,72 @@
         </p>
       </div>
     </section>
+
+    <!-- 5) IMMAGINI CON SCRITTE (3 box) -->
+    <section class="section">
+      <div class="wrap">
+        <div class="grid cols-3 feature-grid">
+          <!-- Sostituisci gli URL con le tue foto -->
+          <article class="feature">
+            <div class="feature-img" style="--img:url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop')"></div>
+            <h4>Ogni pezzo, uno su uno</h4>
+            <p>Nessun modello, nessuna replica: ogni vinile è trasformato a mano.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-img" style="--img:url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600&auto=format&fit=crop')"></div>
+            <h4>Design consapevole</h4>
+            <p>Usiamo vinili autentici, recuperati e reinterpretati con equilibrio tra forma e sostenibilità.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-img" style="--img:url('https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1600&auto=format&fit=crop')"></div>
+            <h4>Fatti a mano in Italia</h4>
+            <p>Creati nel nostro laboratorio: ogni gesto racconta chi siamo.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6) CONTATTI -->
+    <section class="section contact">
+      <div class="wrap">
+        <h2 class="section-title center">Realizziamo insieme il tuo vinile ideale. <br>Contattaci!</h2>
+        <form class="contact-form" action="https://formspree.io/f/your-id" method="POST">
+          <!-- Se non usi Formspree, cambia action con mailto: o backend -->
+          <div class="grid cols-2">
+            <input type="text" name="nome" placeholder="Nome" required>
+            <input type="email" name="email" placeholder="Email" required>
+          </div>
+          <input type="tel" name="telefono" placeholder="Telefono">
+          <textarea name="messaggio" rows="6" placeholder="Commento"></textarea>
+          <button class="btn" type="submit">Invia</button>
+        </form>
+      </div>
+    </section>
   </main>
 
   <footer>
     <p>© 33Giri — fatto a mano in Italia</p>
   </footer>
+
+  <script>
+    /* ==== CATEGORIE CATALOGO (4 card) ==== */
+    const CATEGORIES = [
+      { title:'Standard', image:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop' },
+      { title:'Splash',   image:'https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1600&auto=format&fit=crop' },
+      { title:'Spiral',   image:'https://images.unsplash.com/photo-1541542684-4a63452b09bf?q=80&w=1600&auto=format&fit=crop' },
+      { title:'Disegni',  image:'https://images.unsplash.com/photo-1526312426976-593c2ebc1f59?q=80&w=1600&auto=format&fit=crop' }
+    ];
+    const grid = document.getElementById('catalog-categories');
+    grid.innerHTML = CATEGORIES.map(c => `
+      <article class="card cat">
+        <div class="thumb" style="--img:url('${c.image}')"></div>
+        <div class="body">
+          <span class="pill">${c.title}</span>
+        </div>
+      </article>
+    `).join('');
+  </script>
 </body>
 </html>
