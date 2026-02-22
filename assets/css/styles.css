@@ -1124,3 +1124,33 @@ body.admin{
   color: #fff;
   opacity: .9;
 }
+/* --- Card actions: riduci CTA e rimuovi stock --- */
+
+/* Nascondi completamente "In Stock: 1" */
+.card .stock-text{
+  display: none !important;
+}
+
+/* Riduci un po' la distanza tra pallino + i + bottone */
+.card .stock{
+  gap: 8px !important;
+}
+
+/* Bottone Contattaci più piccolo (senza cambiare stile) */
+.card .mini-wa{
+  height: 40px !important;
+  padding: 0 14px !important;
+  font-size: 16px !important;
+  gap: 8px !important;
+  box-shadow: 0 0 0 8px rgba(37, 211, 102, .14) !important;
+}
+
+/* Iconcina dentro il bottone leggermente più piccola */
+.card .mini-wa .wa-ico{
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.card .mini-wa .wa-ico::after{
+  font-size: 13px !important;
+}
