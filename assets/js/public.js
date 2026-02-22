@@ -1,11 +1,12 @@
 // assets/js/public.js
-(function(){
-  const cfg = window.APP_CONFIG;
+(function () {
+  const cfg = window.APP_CONFIG || {};
   const el = (id) => document.getElementById(id);
 
   const grid = el("grid");
   const count = el("count");
   const q = el("q");
+
   const advanced = el("advanced");
   const toggleFilters = el("toggleFilters");
 
@@ -15,44 +16,20 @@
   const fYear = el("fYear");
 
   // hero texts
-  el("heroTitle").textContent = cfg.heroTitle;
-  el("heroSubtitle").textContent = cfg.heroSubtitle;
+  el("heroTitle").textContent = cfg.heroTitle || "Arte in Vinile";
+  el("heroSubtitle").textContent =
+    cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
 
-  // --- Admin session key (must match admin.js)
-  const LS_ADMIN_SESSION = "33giri_admin_ok_v1";
-
-  // Admin modal
+  // ---------------- Admin modal ----------------
   const adminModal = el("adminModal");
-
-  el("openAdmin").addEventListener("click", () => {
-    el("adminErr").textContent = "";
-    el("adminCode").value = "";
-    adminModal.classList.add("open");
-  });
-
+  el("openAdmin").addEventListener("click", () => adminModal.classList.add("open"));
   el("closeAdmin").addEventListener("click", () => adminModal.classList.remove("open"));
-
-  function setAdminSession(ok){
-    // tieni sia sessionStorage che localStorage così non “perdi” il login
-    if(ok){
-      sessionStorage.setItem(LS_ADMIN_SESSION, "1");
-      localStorage.setItem(LS_ADMIN_SESSION, "1");
-      if (window.Store?.setAdmin) Store.setAdmin(true);
-    } else {
-      sessionStorage.removeItem(LS_ADMIN_SESSION);
-      localStorage.removeItem(LS_ADMIN_SESSION);
-      if (window.Store?.setAdmin) Store.setAdmin(false);
-    }
-  }
 
   el("adminEnter").addEventListener("click", () => {
     const code = el("adminCode").value.trim();
-
-    if(code === String(cfg.adminCode || "").trim()){
-      setAdminSession(true);
-
-      // redirect corretto: admin dentro /admin/
-      window.location.href = "./admin/products.html";
+    if (code === (cfg.adminCode || "")) {
+      Store.setAdmin(true);
+      window.location.href = "/33giri/admin/products.html";
     } else {
       el("adminErr").textContent = "Codice non valido.";
     }
@@ -63,22 +40,34 @@
     advanced.classList.toggle("open");
   });
 
-  function uniq(list){
-    return Array.from(new Set(list.filter(Boolean))).sort((a,b)=> String(a).localeCompare(String(b), "it"));
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
-  function populateFilters(products){
-    const models = uniq(products.map(p => p.model));
-    const cols = uniq(products.map(p => p.collection));
-    const genres = uniq(products.map(p => p.genre));
-    const years = uniq(products.map(p => p.year)).sort((a,b)=> Number(a)-Number(b));
+  function uniq(list) {
+    return Array.from(new Set(list.filter(Boolean))).sort((a, b) => String(a).localeCompare(String(b), "it"));
+  }
 
-    const esc = (s)=> String(s).replaceAll('"','&quot;');
+  // Popola filtri UNA volta (senza resettare selezioni ogni render)
+  let filtersPopulated = false;
+  function populateFiltersOnce(products) {
+    if (filtersPopulated) return;
+    filtersPopulated = true;
+
+    const models = uniq(products.map((p) => p.model));
+    const cols = uniq(products.map((p) => p.collection));
+    const genres = uniq(products.map((p) => p.genre));
+    const years = uniq(products.map((p) => p.year)).sort((a, b) => Number(a) - Number(b));
 
     const fill = (select, items, firstLabel) => {
       select.innerHTML =
         `<option value="">${firstLabel}</option>` +
-        items.map(x => `<option value="${esc(x)}">${x}</option>`).join("");
+        items.map((x) => `<option value="${String(x).replaceAll('"', "&quot;")}">${escapeHtml(x)}</option>`).join("");
     };
 
     fill(fModel, models, "Modello");
@@ -87,114 +76,182 @@
     fill(fYear, years, "Anno");
   }
 
-  function matches(p){
-    // ✅ pubblico mostra SOLO disponibili: se soldAt esiste → venduto
-    if(p.soldAt) return false;
+  function isSold(p) {
+    // compatibile col tuo admin.js: venduto se soldAt esiste
+    return !!p.soldAt;
+  }
+
+  function matches(p) {
+    // pubblica mostra SOLO disponibili
+    if (isSold(p)) return false;
 
     const qs = q.value.trim().toLowerCase();
-    if(qs){
-      const hay = `${p.title||""} ${p.artist||""}`.toLowerCase();
-      if(!hay.includes(qs)) return false;
+    if (qs) {
+      const hay = `${p.title || ""} ${p.artist || ""}`.toLowerCase();
+      if (!hay.includes(qs)) return false;
     }
-    if(fModel.value && p.model !== fModel.value) return false;
-    if(fCollection.value && p.collection !== fCollection.value) return false;
-    if(fGenre.value && p.genre !== fGenre.value) return false;
-    if(fYear.value && String(p.year) !== String(fYear.value)) return false;
+    if (fModel.value && p.model !== fModel.value) return false;
+    if (fCollection.value && p.collection !== fCollection.value) return false;
+    if (fGenre.value && p.genre !== fGenre.value) return false;
+    if (fYear.value && String(p.year) !== String(fYear.value)) return false;
 
     return true;
   }
 
-  function escapeHtml(str){
-    return String(str)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+  function waLinkForProduct(p) {
+    const msg =
+      `Ciao! Sono interessato a: ${p.title || "-"} — ${p.artist || "-"}.\n` +
+      `Modello: ${p.model || "-"} | Collezione: ${p.collection || "-"} | Anno: ${p.year || "-"}.\n` +
+      `Link: ${location.href}`;
+    return `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
   }
 
-  function render(){
-    const products = Store.getProducts();
-    populateFilters(products);
-
-    const filtered = products.filter(matches);
-    count.textContent = String(filtered.length);
-
-    grid.innerHTML = filtered.map(p => `
-      <div class="card" data-id="${p.id}">
-        <div class="card-img">
-          <img src="${p.image1 || ""}" alt="">
-        </div>
-        <div class="card-body">
-          <h3 class="card-title">${escapeHtml(p.title || "")}</h3>
-          <div class="card-sub">${escapeHtml(p.artist || "")}</div>
-          <div class="chips">
-            <span class="chip">${escapeHtml(p.model || "")}</span>
-            ${p.collection ? `<span class="chip blue">${escapeHtml(p.collection || "")}</span>` : ""}
-          </div>
-          <div class="card-meta">
-            <span>${escapeHtml(p.genre || "")}</span>
-            <span>${escapeHtml(String(p.year || ""))}</span>
-          </div>
-        </div>
-      </div>
-    `).join("");
-
-    grid.querySelectorAll(".card").forEach(card => {
-      card.addEventListener("click", () => openProduct(card.dataset.id));
-    });
-  }
-
-  // Product modal
+  // ---------------- Product modal (with arrows) ----------------
   const productModal = el("productModal");
-  el("closeProduct").addEventListener("click", () => productModal.classList.remove("open"));
+  const closeProduct = el("closeProduct");
+  closeProduct.addEventListener("click", () => productModal.classList.remove("open"));
   productModal.addEventListener("click", (e) => {
-    if(e.target === productModal) productModal.classList.remove("open");
+    if (e.target === productModal) productModal.classList.remove("open");
   });
 
-  let current = null;
-  let showingAlt = false;
+  const imgPrev = el("imgPrev");
+  const imgNext = el("imgNext");
 
-  function openProduct(id){
-    const p = Store.getProducts().find(x => x.id === id);
-    if(!p) return;
+  let current = null;
+  let images = [];
+  let imgIndex = 0;
+
+  function setModalImage(i) {
+    if (!images.length) return;
+    imgIndex = (i + images.length) % images.length;
+    el("mImg").src = images[imgIndex];
+    // mostra frecce solo se c'è più di 1 immagine
+    const showNav = images.length > 1;
+    imgPrev.style.display = showNav ? "grid" : "none";
+    imgNext.style.display = showNav ? "grid" : "none";
+  }
+
+  imgPrev.addEventListener("click", () => setModalImage(imgIndex - 1));
+  imgNext.addEventListener("click", () => setModalImage(imgIndex + 1));
+
+  document.addEventListener("keydown", (e) => {
+    if (!productModal.classList.contains("open")) return;
+    if (e.key === "ArrowLeft") setModalImage(imgIndex - 1);
+    if (e.key === "ArrowRight") setModalImage(imgIndex + 1);
+    if (e.key === "Escape") productModal.classList.remove("open");
+  });
+
+  function openProduct(id) {
+    const p = Store.getProducts().find((x) => x.id === id);
+    if (!p) return;
 
     current = p;
-    showingAlt = false;
+    images = [];
+    if (p.image1) images.push(p.image1);
+    if (p.image2 && String(p.image2).trim()) images.push(p.image2);
 
     el("mTitle").textContent = p.title || "";
     el("mArtist").textContent = p.artist || "";
     el("mGenre").textContent = p.genre || "";
     el("mYear").textContent = p.year || "";
-    el("mImg").src = p.image1 || "";
     el("mExtra").textContent = `${p.model || ""}${p.collection ? " · " + p.collection : ""}`;
 
-    const sold = !!p.soldAt;
+    const sold = isSold(p);
     el("mDot").classList.toggle("sold", sold);
     el("mStatusText").textContent = sold ? "Venduto" : "Disponibile - Pezzo Unico";
 
-    el("whBtn").onclick = () => {
-      const msg =
-        `Ciao! Sono interessato a: ${p.title} — ${p.artist}. ` +
-        `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
-        `Link: ${location.href}`;
-      const url = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
-      window.open(url, "_blank");
-    };
+    el("whBtn").onclick = () => window.open(waLinkForProduct(p), "_blank");
 
-    const btn2 = el("img2Btn");
-    btn2.style.display = (p.image2 && String(p.image2).trim()) ? "grid" : "none";
-    btn2.onclick = () => {
-      showingAlt = !showingAlt;
-      el("mImg").src = showingAlt ? (current.image2 || current.image1) : (current.image1 || current.image2);
-    };
-
+    setModalImage(0);
     productModal.classList.add("open");
   }
 
+  // ---------------- Render cards ----------------
+  const INFO_TOOLTIP_TEXT = "MODELLO STANDARD MA PERSONALIZZABILE SU RICHIESTA";
+
+  function render() {
+    const products = Store.getProducts() || [];
+    populateFiltersOnce(products);
+
+    const filtered = products.filter(matches);
+    count.textContent = String(filtered.length);
+
+    grid.innerHTML = filtered
+      .map((p) => {
+        const stock = (p.stock != null ? p.stock : 1);
+        return `
+        <div class="card" data-id="${p.id}">
+          <div class="card-img">
+            <img src="${p.image1 || ""}" alt="">
+            <div class="card-top-chips">
+              <span class="pill pill-green">${escapeHtml(p.model || "")}</span>
+              <span class="pill pill-blue">${escapeHtml(p.collection || "")}</span>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <h3 class="card-title">${escapeHtml(p.title || "")}</h3>
+            <div class="card-sub">${escapeHtml(p.artist || "")}</div>
+
+            <div class="card-meta-row">
+              <div class="card-genre">${escapeHtml(p.genre || "")}</div>
+              <div class="card-year">${escapeHtml(String(p.year || ""))}</div>
+            </div>
+
+            <div class="card-actions">
+              <div class="stock">
+                <span class="dot"></span>
+                <span class="stock-text">In Stock: ${escapeHtml(String(stock))}</span>
+
+                <button class="mini-info" type="button" data-act="info" aria-label="Info">
+                  i
+                  <span class="tip">${INFO_TOOLTIP_TEXT}</span>
+                </button>
+              </div>
+
+              <button class="mini-wa" type="button" data-act="wa" aria-label="Contattaci su WhatsApp">
+                <span class="wa-ico" aria-hidden="true"></span>
+                Contattaci
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      })
+      .join("");
+
+    // click handlers
+    grid.querySelectorAll(".card").forEach((card) => {
+      const id = card.dataset.id;
+
+      // clic sulla card -> modal
+      card.addEventListener("click", () => openProduct(id));
+
+      // whatsapp: blocca apertura modal e apri wa
+      const waBtn = card.querySelector('[data-act="wa"]');
+      if (waBtn) {
+        waBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const p = (Store.getProducts() || []).find((x) => x.id === id);
+          if (!p) return;
+          window.open(waLinkForProduct(p), "_blank");
+        });
+      }
+
+      // info: su click apri anche modal (ma non obbligatorio)
+      const infoBtn = card.querySelector('[data-act="info"]');
+      if (infoBtn) {
+        infoBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openProduct(id);
+        });
+      }
+    });
+  }
+
   // listeners
-  [q, fModel, fCollection, fGenre, fYear].forEach(x => x.addEventListener("input", render));
-  [fModel, fCollection, fGenre, fYear].forEach(x => x.addEventListener("change", render));
+  [q, fModel, fCollection, fGenre, fYear].forEach((x) => x.addEventListener("input", render));
+  [fModel, fCollection, fGenre, fYear].forEach((x) => x.addEventListener("change", render));
 
   render();
 })();
