@@ -21,3 +21,12 @@ try {
   });
   Object.freeze(window.APP_CONFIG);
 } catch (e) {}
+
+// assets/js/config.js
+window.APP_CONFIG = {
+  // ...tutte le tue altre config (heroTitle, heroSubtitle, whatsappNumber, adminCode ecc.)
+
+  supabaseUrl: "https://XXXX.supabase.co",
+  supabaseAnonKey: "YYYY",
+  supabaseProductsTable: "products"
+};
