@@ -26,7 +26,7 @@ try {
 window.APP_CONFIG = {
   // ...tutte le tue altre config (heroTitle, heroSubtitle, whatsappNumber, adminCode ecc.)
 
-  supabaseUrl: "https://XXXX.supabase.co",
-  supabaseAnonKey: "YYYY",
+  supabaseUrl: "https://oovqibecarfdoybzbqwt.supabase.co",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vdnFpYmVjYXJmZG95YnpicXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NjU1MDQsImV4cCI6MjA4NzM0MTUwNH0.yym_Y9i6Pl-dxicCxPXnWVg6E69RLYpyKBw7AWzq4wI",
   supabaseProductsTable: "products"
 };
