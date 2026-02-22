@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestione Prodotti - 33Giri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+
+<body class="admin">
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <circle cx="32" cy="32" r="26" stroke="#9cd79c" stroke-width="4"/>
+          <circle cx="32" cy="32" r="7" stroke="#9cd79c" stroke-width="4"/>
+        </svg>
+        <span>33Giri Catalogo</span>
+      </div>
+      <small>Pannello Admin</small>
+
+      <nav class="nav">
+        <a href="products.html" class="active">▦ Prodotti</a>
+        <a href="add.html">＋ Aggiungi</a>
+        <a href="sold.html">🛒 Venduti</a>
+      </nav>
+
+      <button class="logout" id="logout">↩ Esci</button>
+    </aside>
+
+    <main class="main">
+      <h1 class="page-title">Gestione Prodotti</h1>
+      <div class="page-sub"><span id="total">0</span> prodotti in catalogo</div>
+
+      <div class="toolbar">
+        <div></div>
+        <input class="admin-search" id="search" placeholder="Cerca prodotti..." />
+      </div>
+
+      <div class="panel">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>PRODOTTO</th>
+              <th>ARTISTA</th>
+              <th>MODELLO</th>
+              <th>COLLEZIONE</th>
+              <th>ANNO</th>
+              <th>AZIONI</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div class="modal-backdrop" id="editModal">
+    <div class="modal small">
+      <button class="modal-close" id="closeEdit">✕</button>
+      <div class="modal-content" style="padding:22px;">
+        <h2 style="font-size:18px;margin:0 0 14px;color:#0e1626;">Modifica Prodotto</h2>
+
+        <div class="form" style="margin-top:0;">
+          <div class="field">
+            <label>Titolo</label>
+            <input id="eTitle">
+          </div>
+          <div class="field">
+            <label>Artista</label>
+            <input id="eArtist">
+          </div>
+          <div class="field">
+            <label>Genere</label>
+            <input id="eGenre">
+          </div>
+          <div class="field">
+            <label>Anno</label>
+            <input id="eYear" type="number">
+          </div>
+          <div class="field">
+            <label>Modello</label>
+            <input id="eModel">
+          </div>
+          <div class="field">
+            <label>Collezione</label>
+            <input id="eCollection">
+          </div>
+          <div class="field">
+            <label>Immagine 1 (URL o DataURL)</label>
+            <input id="eImg1">
+          </div>
+          <div class="field">
+            <label>Immagine 2 (URL o DataURL)</label>
+            <input id="eImg2">
+          </div>
+
+          <button class="primary-btn" id="saveEdit">Salva</button>
+          <div class="modal-note" id="editNote" style="color:rgba(14,22,38,.6)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/store.js"></script>
+  <script src="../assets/js/admin.js"></script>
+</body>
+</html>
