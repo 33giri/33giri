@@ -1,149 +1,122 @@
 // assets/js/store.js
+// Unico punto di verità per localStorage (stesse chiavi di admin.js)
+
 (function () {
-  const KEY = window.APP_CONFIG.storageKey;
+  const LS_PRODUCTS = "33giri_products_v1";
+  const LS_MODELS = "33giri_models_v1";
+  const LS_COLLECTIONS = "33giri_collections_v1";
+  const LS_ADMIN_SESSION = "33giri_admin_ok_v1";
 
-  function nowISO() {
-    return new Date().toISOString();
-  }
+  // vecchie chiavi (se in passato ne avevi altre)
+  const LEGACY_KEYS = [
+    "33giri_products",
+    "33giri_products_v0",
+    "products",
+    "catalog_products",
+  ];
 
-  function load() {
+  function readJSON(key, fallback) {
     try {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) {
-        return {
-          products: [],
-          sales: []
-        };
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.error("JSON parse error", key, e);
+      return fallback;
+    }
+  }
+
+  function writeJSON(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function normalizeProduct(p) {
+    const out = { ...p };
+
+    // compat: se prima usavi status="sold"
+    if (out.status === "sold" && !out.soldAt) out.soldAt = new Date().toISOString();
+    if (out.soldAt) out.status = "sold";
+    else delete out.status;
+
+    // garantisci campi minimi
+    out.id = out.id || (Math.random().toString(16).slice(2) + Date.now().toString(16));
+    out.title = out.title || "";
+    out.artist = out.artist || "";
+    out.genre = out.genre || "";
+    out.year = out.year || "";
+    out.model = out.model || "";
+    out.collection = out.collection || "";
+    out.image1 = out.image1 || "";
+    out.image2 = out.image2 || "";
+
+    return out;
+  }
+
+  function migrateIfNeeded() {
+    const current = readJSON(LS_PRODUCTS, null);
+    if (Array.isArray(current)) return; // già ok
+
+    // prova a trovare dati in vecchie chiavi
+    for (const k of LEGACY_KEYS) {
+      const legacy = readJSON(k, null);
+      if (Array.isArray(legacy) && legacy.length) {
+        const fixed = legacy.map(normalizeProduct);
+        writeJSON(LS_PRODUCTS, fixed);
+        console.warn("Migrated products from", k, "->", LS_PRODUCTS);
+        return;
       }
-      const parsed = JSON.parse(raw);
-      return {
-        products: Array.isArray(parsed.products) ? parsed.products : [],
-        sales: Array.isArray(parsed.sales) ? parsed.sales : []
-      };
-    } catch {
-      return { products: [], sales: [] };
     }
+
+    // se non c'è niente, inizializza vuoto
+    writeJSON(LS_PRODUCTS, []);
   }
 
-  function save(state) {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  }
+  migrateIfNeeded();
 
-  function uid() {
-    return "p_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-  }
+  const Store = {
+    // --- admin session ---
+    setAdmin(ok) {
+      if (ok) {
+        sessionStorage.setItem(LS_ADMIN_SESSION, "1");
+        localStorage.setItem(LS_ADMIN_SESSION, "1");
+      } else {
+        sessionStorage.removeItem(LS_ADMIN_SESSION);
+        localStorage.removeItem(LS_ADMIN_SESSION);
+      }
+    },
+    isAdmin() {
+      return (
+        sessionStorage.getItem(LS_ADMIN_SESSION) === "1" ||
+        localStorage.getItem(LS_ADMIN_SESSION) === "1"
+      );
+    },
 
-  function upsertProduct(product) {
-    const state = load();
-    const idx = state.products.findIndex(p => p.id === product.id);
-    if (idx >= 0) state.products[idx] = { ...state.products[idx], ...product };
-    else state.products.unshift(product);
-    save(state);
-    return product;
-  }
+    // --- products ---
+    getProducts() {
+      const list = readJSON(LS_PRODUCTS, []);
+      return Array.isArray(list) ? list.map(normalizeProduct) : [];
+    },
+    setProducts(list) {
+      const fixed = (Array.isArray(list) ? list : []).map(normalizeProduct);
+      writeJSON(LS_PRODUCTS, fixed);
+      return fixed;
+    },
 
-  function createProduct(payload) {
-    const p = {
-      id: uid(),
-      title: payload.title || "",
-      artist: payload.artist || "",
-      genre: payload.genre || "",
-      year: Number(payload.year) || "",
-      model: payload.model || "",
-      collection: payload.collection || "",
-      image1: payload.image1 || "",
-      image2: payload.image2 || "",
-      status: "available", // available | sold
-      createdAt: nowISO(),
-      soldAt: null
-    };
-    return upsertProduct(p);
-  }
-
-  function deleteProduct(id) {
-    const state = load();
-    state.products = state.products.filter(p => p.id !== id);
-    // pulisci anche vendite collegate (opzionale)
-    state.sales = state.sales.filter(s => s.productId !== id);
-    save(state);
-  }
-
-  function markSold(id) {
-    const state = load();
-    const p = state.products.find(x => x.id === id);
-    if (!p) return null;
-    if (p.status === "sold") return p;
-
-    p.status = "sold";
-    p.soldAt = nowISO();
-
-    state.sales.unshift({
-      id: "s_" + uid(),
-      productId: p.id,
-      title: p.title,
-      artist: p.artist,
-      model: p.model,
-      collection: p.collection,
-      genre: p.genre,
-      year: p.year,
-      image1: p.image1,
-      soldAt: p.soldAt
-    });
-
-    save(state);
-    return p;
-  }
-
-  function undoSold(id) {
-    const state = load();
-    const p = state.products.find(x => x.id === id);
-    if (!p) return null;
-
-    p.status = "available";
-    p.soldAt = null;
-    state.sales = state.sales.filter(s => s.productId !== id);
-
-    save(state);
-    return p;
-  }
-
-  function getProducts() {
-    return load().products;
-  }
-
-  function getSales() {
-    return load().sales;
-  }
-
-  function isAdmin() {
-    return sessionStorage.getItem("isAdmin") === "1";
-  }
-
-  function setAdmin(flag) {
-    sessionStorage.setItem("isAdmin", flag ? "1" : "0");
-  }
-
-  function requireAdminOrRedirect() {
-    if (!isAdmin()) {
-      window.location.href = "../index.html";
-    }
-  }
-
-  function fmtDate(iso) {
-    if (!iso) return "";
-    const d = new Date(iso);
-    // formato tipo screenshot: "10 febbraio 2026, 12:20"
-    const date = d.toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" });
-    const time = d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-    return `${date}, ${time}`;
-  }
-
-  window.Store = {
-    load, save, uid,
-    createProduct, upsertProduct, deleteProduct,
-    markSold, undoSold,
-    getProducts, getSales,
-    isAdmin, setAdmin, requireAdminOrRedirect,
-    fmtDate
+    // --- models / collections (opzionali) ---
+    getModels() {
+      const list = readJSON(LS_MODELS, ["Svuotatasche", "Posacenere"]);
+      return Array.isArray(list) ? list : ["Svuotatasche", "Posacenere"];
+    },
+    setModels(list) {
+      writeJSON(LS_MODELS, Array.from(new Set(list || [])).filter(Boolean));
+    },
+    getCollections() {
+      const list = readJSON(LS_COLLECTIONS, ["Standard", "Spiral", "Splash"]);
+      return Array.isArray(list) ? list : ["Standard", "Spiral", "Splash"];
+    },
+    setCollections(list) {
+      writeJSON(LS_COLLECTIONS, Array.from(new Set(list || [])).filter(Boolean));
+    },
   };
+
+  window.Store = Store;
 })();
