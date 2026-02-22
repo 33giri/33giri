@@ -110,16 +110,48 @@
       .replaceAll("'","&#039;");
   }
 
+  // ---------------- Tooltip "i" (home + modal) ----------------
+  const INFO_TEXT = "Modello standard, personalizzabile su richiesta";
+
+  function closeAllInfoTips(){
+    document.querySelectorAll(".mini-info.is-open").forEach(btn => btn.classList.remove("is-open"));
+  }
+
+  // chiudi tooltip se clicchi fuori (mobile)
+  document.addEventListener("click", (e) => {
+    const insideInfo = e.target.closest && e.target.closest(".mini-info");
+    if (!insideInfo) closeAllInfoTips();
+  }, { capture: true });
+
   // ---------------- Product modal + arrows ----------------
   const productModal = el("productModal");
   const closeBtn = el("closeProduct");
   const imgPrev = el("imgPrev");
   const imgNext = el("imgNext");
+  const modalInfo = el("modalInfo");
 
-  closeBtn.addEventListener("click", () => productModal.classList.remove("open"));
+  function closeModal(){
+    productModal.classList.remove("open");
+    closeAllInfoTips();
+  }
+
+  closeBtn.addEventListener("click", closeModal);
+
   productModal.addEventListener("click", (e) => {
-    if(e.target === productModal) productModal.classList.remove("open");
+    if(e.target === productModal) closeModal();
   });
+
+  // tap sulla i nel modal: toggle tooltip (identico home)
+  if(modalInfo){
+    modalInfo.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // chiudi gli altri, poi apri/chiudi questo
+      document.querySelectorAll(".mini-info.is-open").forEach(btn => {
+        if (btn !== modalInfo) btn.classList.remove("is-open");
+      });
+      modalInfo.classList.toggle("is-open");
+    });
+  }
 
   let currentImages = [];
   let imgIndex = 0;
@@ -139,7 +171,6 @@
     const p = (Store.getProducts() || []).find(x => x.id === id);
     if(!p) return;
 
-    // chiudi eventuali tooltip aperti
     closeAllInfoTips();
 
     // immagini disponibili
@@ -191,21 +222,8 @@
     if(!productModal.classList.contains("open")) return;
     if(e.key === "ArrowLeft") setModalImage(imgIndex - 1);
     if(e.key === "ArrowRight") setModalImage(imgIndex + 1);
-    if(e.key === "Escape") productModal.classList.remove("open");
+    if(e.key === "Escape") closeModal();
   });
-
-  // ---------------- Tooltip "i" in card ----------------
-  const INFO_TEXT = "Modello standard, personalizzabile su richiesta";
-
-  function closeAllInfoTips(){
-    document.querySelectorAll(".mini-info.is-open").forEach(btn => btn.classList.remove("is-open"));
-  }
-
-  // chiudi tooltip se clicchi fuori (mobile)
-  document.addEventListener("click", (e) => {
-    const insideInfo = e.target.closest && e.target.closest(".mini-info");
-    if (!insideInfo) closeAllInfoTips();
-  }, { capture: true });
 
   // ---------------- Render cards ----------------
   function render(){
@@ -235,13 +253,11 @@
             <span>${escapeHtml(String(p.year || ""))}</span>
           </div>
 
-          <!-- Riga azioni stile reference -->
           <div class="card-actions">
             <div class="stock">
               <span class="dot"></span>
               <span class="stock-text">In Stock: 1</span>
 
-              <!-- ✅ "i" da sola + tooltip nascosto -->
               <button class="mini-info" type="button" data-act="info" aria-label="Info">
                 i
                 <span class="tip" role="tooltip">${INFO_TEXT}</span>
@@ -286,11 +302,9 @@
       if (infoBtn) {
         infoBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          // chiudi gli altri
           document.querySelectorAll(".mini-info.is-open").forEach(btn => {
             if (btn !== infoBtn) btn.classList.remove("is-open");
           });
-          // toggle su questo
           infoBtn.classList.toggle("is-open");
         });
       }
