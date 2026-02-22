@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Aggiungi Prodotto - 33Giri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+
+<body class="admin">
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <circle cx="32" cy="32" r="26" stroke="#9cd79c" stroke-width="4"/>
+          <circle cx="32" cy="32" r="7" stroke="#9cd79c" stroke-width="4"/>
+        </svg>
+        <span>33Giri Catalogo</span>
+      </div>
+      <small>Pannello Admin</small>
+
+      <nav class="nav">
+        <a href="products.html">▦ Prodotti</a>
+        <a href="add.html" class="active">＋ Aggiungi</a>
+        <a href="sold.html">🛒 Venduti</a>
+      </nav>
+
+      <button class="logout" id="logout">↩ Esci</button>
+    </aside>
+
+    <main class="main">
+      <h1 class="page-title">Aggiungi Prodotto</h1>
+      <div class="page-sub">Inserisci i dettagli del nuovo vinile</div>
+
+      <div class="panel" style="padding:18px;">
+        <div class="uploads">
+          <label class="drop" id="drop1">
+            <input type="file" id="img1" accept="image/*">
+            Clicca per caricare
+          </label>
+          <label class="drop" id="drop2">
+            <input type="file" id="img2" accept="image/*">
+            Clicca per caricare
+          </label>
+        </div>
+
+        <div class="form">
+          <div class="form-grid">
+            <div class="field">
+              <label>Titolo Album/Canzone *</label>
+              <input id="title" placeholder="Es: Dark Side of the Moon">
+            </div>
+            <div class="field">
+              <label>Artista *</label>
+              <input id="artist" placeholder="Es: Pink Floyd">
+            </div>
+            <div class="field">
+              <label>Genere Musicale *</label>
+              <input id="genre" placeholder="Es: Rock Progressivo">
+            </div>
+            <div class="field">
+              <label>Anno *</label>
+              <input id="year" type="number" placeholder="1960">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Modello (Tipo di Prodotto) *</label>
+            <select id="modelSelect"></select>
+            <div class="inline-add" style="margin-top:10px;">
+              <input id="modelNew" placeholder="Aggiungi nuovo modello..." style="flex:1;">
+              <button class="plus-btn" id="addModel">+</button>
+            </div>
+            <div class="hint">Es: svuotatasche, posacenere</div>
+          </div>
+
+          <div class="field">
+            <label>Collezione (Stile)</label>
+            <select id="collectionSelect"></select>
+            <div class="inline-add" style="margin-top:10px;">
+              <input id="collectionNew" placeholder="Aggiungi nuova collezione..." style="flex:1;">
+              <button class="plus-btn" id="addCollection">+</button>
+            </div>
+            <div class="hint">Es: standard, splash, spiral, touch</div>
+          </div>
+
+          <button class="primary-btn" id="save">Salva Prodotto</button>
+          <div class="modal-note" id="note"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/store.js"></script>
+  <script src="../assets/js/admin.js"></script>
+</body>
+</html>
