@@ -27,11 +27,17 @@ function uid() {
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
 
+/* ✅ NEW: base path helper (GitHub Pages project site /33giri/) */
+function basePath() {
+  return location.pathname.includes("/33giri/") ? "/33giri/" : "/";
+}
+
+/* ✅ FIXED: correct redirect to project index */
 function requireAdmin() {
   const ok = sessionStorage.getItem(LS_ADMIN_SESSION) === "1";
   if (!ok) {
-    // torna a index
-    window.location.href = "../index.html";
+    // torna a index (corretto su GitHub Pages e in locale)
+    window.location.href = basePath() + "index.html";
   }
 }
 
@@ -74,11 +80,12 @@ function wireSidebarActive() {
       a.classList.add("active");
     }
   });
+
   const out = qs("#logoutBtn");
   if (out) {
     out.addEventListener("click", () => {
       sessionStorage.removeItem(LS_ADMIN_SESSION);
-      window.location.href = "../index.html";
+      window.location.href = basePath() + "index.html";
     });
   }
 }
