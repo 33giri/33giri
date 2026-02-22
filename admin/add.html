@@ -4,16 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Aggiungi Prodotto - 33Giri</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/33giri/assets/css/styles.css?v=1" />
+
+  <!-- ✅ usa SEMPRE path assoluto su GitHub Pages -->
+  <link rel="stylesheet" href="/33giri/assets/css/style.css?v=3" />
 </head>
 
 <body class="admin">
   <div class="admin-shell">
     <aside class="sidebar">
       <div class="brand">
-        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <svg width="34" height="34" viewBox="0 0 64 64" fill="none" aria-hidden="true">
           <circle cx="32" cy="32" r="26" stroke="#9cd79c" stroke-width="4"/>
           <circle cx="32" cy="32" r="7" stroke="#9cd79c" stroke-width="4"/>
         </svg>
@@ -27,7 +30,8 @@
         <a href="sold.html">🛒 Venduti</a>
       </nav>
 
-      <button class="logout" id="logout">↩ Esci</button>
+      <!-- ✅ id corretto per admin.js -->
+      <button class="logout" id="logoutBtn">↩ Esci</button>
     </aside>
 
     <main class="main">
@@ -35,66 +39,91 @@
       <div class="page-sub">Inserisci i dettagli del nuovo vinile</div>
 
       <div class="panel" style="padding:18px;">
-        <div class="uploads">
-          <label class="drop" id="drop1">
-            <input type="file" id="img1" accept="image/*">
-            Clicca per caricare
-          </label>
-          <label class="drop" id="drop2">
-            <input type="file" id="img2" accept="image/*">
-            Clicca per caricare
-          </label>
-        </div>
 
-        <div class="form">
+        <!-- ✅ FORM vero: admin.js ascolta submit -->
+        <form class="form" id="productForm">
+
+          <div class="uploads">
+            <!-- Immagine 1 -->
+            <label class="drop" id="drop1">
+              <input type="file" id="image1" accept="image/*">
+              Clicca per caricare
+            </label>
+
+            <!-- Immagine 2 -->
+            <label class="drop" id="drop2">
+              <input type="file" id="image2" accept="image/*">
+              Clicca per caricare
+            </label>
+          </div>
+
+          <!-- Preview invisibili (ma utili per edit). Se vuoi, li puoi rendere visibili in CSS -->
+          <img id="preview1" alt="" style="display:none;">
+          <img id="preview2" alt="" style="display:none;">
+
           <div class="form-grid">
             <div class="field">
               <label>Titolo Album/Canzone *</label>
-              <input id="title" placeholder="Es: Dark Side of the Moon">
+              <input id="title" placeholder="Es: Dark Side of the Moon" />
             </div>
+
             <div class="field">
               <label>Artista *</label>
-              <input id="artist" placeholder="Es: Pink Floyd">
+              <input id="artist" placeholder="Es: Pink Floyd" />
             </div>
+
             <div class="field">
               <label>Genere Musicale *</label>
-              <input id="genre" placeholder="Es: Rock Progressivo">
+              <input id="genre" placeholder="Es: Rock Progressivo" />
             </div>
+
             <div class="field">
               <label>Anno *</label>
-              <input id="year" type="number" placeholder="1960">
+              <input id="year" type="number" placeholder="1960" />
             </div>
           </div>
 
           <div class="field">
             <label>Modello (Tipo di Prodotto) *</label>
-            <select id="modelSelect"></select>
+            <!-- ✅ id corretto -->
+            <select id="model"></select>
+
             <div class="inline-add" style="margin-top:10px;">
-              <input id="modelNew" placeholder="Aggiungi nuovo modello..." style="flex:1;">
-              <button class="plus-btn" id="addModel">+</button>
+              <!-- ✅ id corretto -->
+              <input id="newModel" placeholder="Aggiungi nuovo modello..." style="flex:1;">
+              <!-- ✅ id corretto -->
+              <button class="plus-btn" id="addModelBtn" type="button">+</button>
             </div>
+
             <div class="hint">Es: svuotatasche, posacenere</div>
           </div>
 
           <div class="field">
             <label>Collezione (Stile)</label>
-            <select id="collectionSelect"></select>
+            <!-- ✅ id corretto -->
+            <select id="collection"></select>
+
             <div class="inline-add" style="margin-top:10px;">
-              <input id="collectionNew" placeholder="Aggiungi nuova collezione..." style="flex:1;">
-              <button class="plus-btn" id="addCollection">+</button>
+              <!-- ✅ id corretto -->
+              <input id="newCollection" placeholder="Aggiungi nuova collezione..." style="flex:1;">
+              <!-- ✅ id corretto -->
+              <button class="plus-btn" id="addCollectionBtn" type="button">+</button>
             </div>
+
             <div class="hint">Es: standard, splash, spiral, touch</div>
           </div>
 
-          <button class="primary-btn" id="save">Salva Prodotto</button>
+          <!-- ✅ submit vero -->
+          <button class="primary-btn" id="saveBtn" type="submit">Salva Prodotto</button>
           <div class="modal-note" id="note"></div>
-        </div>
+        </form>
       </div>
     </main>
   </div>
 
-  <script src="../assets/js/config.js"></script>
-  <script src="../assets/js/store.js"></script>
-  <script src="../assets/js/admin.js"></script>
+  <!-- ✅ path assoluti GitHub Pages + cache bust -->
+  <script src="/33giri/assets/js/config.js?v=3"></script>
+  <script src="/33giri/assets/js/store.js?v=3"></script>
+  <script src="/33giri/assets/js/admin.js?v=3"></script>
 </body>
 </html>
