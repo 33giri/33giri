@@ -19,21 +19,67 @@
   el("heroTitle").textContent = cfg.heroTitle;
   el("heroSubtitle").textContent = cfg.heroSubtitle;
 
-  // Admin modal
+  // -------------------------------------------------------
+  // Admin modal (FIX: sessionStorage + correct redirect)
+  // -------------------------------------------------------
   const adminModal = el("adminModal");
-  el("openAdmin").addEventListener("click", () => adminModal.classList.add("open"));
-  el("closeAdmin").addEventListener("click", () => adminModal.classList.remove("open"));
-  el("adminEnter").addEventListener("click", () => {
-    const code = el("adminCode").value.trim();
+  const adminErr = el("adminErr");
+  const adminCode = el("adminCode");
+
+  function openAdminModal(){
+    adminModal.classList.add("open");
+    adminErr.textContent = "";
+    adminCode.value = "";
+    setTimeout(() => adminCode.focus(), 50);
+  }
+  function closeAdminModal(){
+    adminModal.classList.remove("open");
+    adminErr.textContent = "";
+  }
+
+  el("openAdmin").addEventListener("click", openAdminModal);
+  el("closeAdmin").addEventListener("click", closeAdminModal);
+
+  // click outside closes
+  adminModal.addEventListener("click", (e) => {
+    if (e.target === adminModal) closeAdminModal();
+  });
+
+  function doAdminLogin(){
+    const code = adminCode.value.trim();
     if(code === cfg.adminCode){
-      Store.setAdmin(true);
-      window.location.href = "admin/products.html";
+      // ✅ IMPORTANT: this is what admin.js checks
+      sessionStorage.setItem("33giri_admin_ok_v1", "1");
+
+      // (Optional: keep your Store flag if you want)
+      if (window.Store && typeof Store.setAdmin === "function") {
+        Store.setAdmin(true);
+      }
+
+      // ✅ IMPORTANT: your admin pages are in ROOT, not /admin/
+      window.location.href = "products.html";
     } else {
-      el("adminErr").textContent = "Codice non valido.";
+      adminErr.textContent = "Codice non valido.";
+    }
+  }
+
+  el("adminEnter").addEventListener("click", doAdminLogin);
+
+  // press Enter in input
+  adminCode.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      doAdminLogin();
     }
   });
 
+  adminCode.addEventListener("input", () => {
+    adminErr.textContent = "";
+  });
+
+  // -------------------------------------------------------
   // Filters toggle
+  // -------------------------------------------------------
   toggleFilters.addEventListener("click", () => {
     advanced.classList.toggle("open");
   });
@@ -49,7 +95,9 @@
     const years = uniq(products.map(p => p.year)).sort((a,b)=> Number(a)-Number(b));
 
     const fill = (select, items, firstLabel) => {
-      select.innerHTML = `<option value="">${firstLabel}</option>` + items.map(x => `<option value="${String(x).replaceAll('"','&quot;')}">${x}</option>`).join("");
+      select.innerHTML =
+        `<option value="">${firstLabel}</option>` +
+        items.map(x => `<option value="${String(x).replaceAll('"','&quot;')}">${x}</option>`).join("");
     };
 
     fill(fModel, models, "Modello");
@@ -116,9 +164,12 @@
       .replaceAll("'","&#039;");
   }
 
+  // -------------------------------------------------------
   // Product modal
+  // -------------------------------------------------------
   const productModal = el("productModal");
   const closeProduct = el("closeProduct");
+
   closeProduct.addEventListener("click", () => productModal.classList.remove("open"));
   productModal.addEventListener("click", (e) => {
     if(e.target === productModal) productModal.classList.remove("open");
