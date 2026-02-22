@@ -110,14 +110,6 @@
       .replaceAll("'","&#039;");
   }
 
-  function waLinkForProduct(p){
-    const msg =
-      `Ciao! Sono interessato a: ${p.title || "-"} — ${p.artist || "-"}. ` +
-      `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
-      `Link: ${location.href}`;
-    return `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
-  }
-
   // ---------------- Product modal + arrows ----------------
   const productModal = el("productModal");
   const closeBtn = el("closeProduct");
@@ -147,6 +139,9 @@
     const p = (Store.getProducts() || []).find(x => x.id === id);
     if(!p) return;
 
+    // chiudi eventuali tooltip aperti
+    closeAllInfoTips();
+
     // immagini disponibili
     currentImages = [];
     if(p.image1) currentImages.push(p.image1);
@@ -163,7 +158,14 @@
     el("mDot").classList.toggle("sold", sold);
     el("mStatusText").textContent = sold ? "Venduto" : "Disponibile - Pezzo Unico";
 
-    el("whBtn").onclick = () => window.open(waLinkForProduct(p), "_blank");
+    el("whBtn").onclick = () => {
+      const msg =
+        `Ciao! Sono interessato a: ${p.title} — ${p.artist}. ` +
+        `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
+        `Link: ${location.href}`;
+      const url = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
+      window.open(url, "_blank");
+    };
 
     imgIndex = 0;
     setModalImage(0);
@@ -192,26 +194,18 @@
     if(e.key === "Escape") productModal.classList.remove("open");
   });
 
-  // ---------------- Tooltip "i" in card: hover desktop + tap mobile ----------------
-  const TOOLTIP_TEXT = "Modello standard, personalizzabile su richiesta";
+  // ---------------- Tooltip "i" in card ----------------
+  const INFO_TEXT = "Modello standard, personalizzabile su richiesta";
 
-  function closeAllTooltips(exceptBtn){
-    document.querySelectorAll(".info-btn.is-open").forEach(btn => {
-      if (exceptBtn && btn === exceptBtn) return;
-      btn.classList.remove("is-open");
-      const tip = btn.querySelector(".info-tip");
-      if (tip) tip.setAttribute("aria-hidden", "true");
-    });
+  function closeAllInfoTips(){
+    document.querySelectorAll(".mini-info.is-open").forEach(btn => btn.classList.remove("is-open"));
   }
 
-  // chiudi tooltip cliccando fuori
+  // chiudi tooltip se clicchi fuori (mobile)
   document.addEventListener("click", (e) => {
-    const btn = e.target.closest(".info-btn");
-    if (!btn) closeAllTooltips();
-  });
-
-  // chiudi tooltip quando scrolli (mobile)
-  window.addEventListener("scroll", () => closeAllTooltips(), { passive: true });
+    const insideInfo = e.target.closest && e.target.closest(".mini-info");
+    if (!insideInfo) closeAllInfoTips();
+  }, { capture: true });
 
   // ---------------- Render cards ----------------
   function render(){
@@ -241,20 +235,21 @@
             <span>${escapeHtml(String(p.year || ""))}</span>
           </div>
 
+          <!-- Riga azioni stile reference -->
           <div class="card-actions">
             <div class="stock">
               <span class="dot"></span>
               <span class="stock-text">In Stock: 1</span>
 
-              <!-- ✅ i + tooltip -->
-              <button class="info-btn" type="button" aria-label="Info">
+              <!-- ✅ "i" da sola + tooltip nascosto -->
+              <button class="mini-info" type="button" data-act="info" aria-label="Info">
                 i
-                <span class="info-tip" aria-hidden="true">${TOOLTIP_TEXT}</span>
+                <span class="tip" role="tooltip">${INFO_TEXT}</span>
               </button>
             </div>
 
-            <!-- ✅ bottone contattaci dentro card -->
             <button class="mini-wa" type="button" data-act="wa" aria-label="Contattaci su WhatsApp">
+              <span class="wa-ico" aria-hidden="true"></span>
               Contattaci
             </button>
           </div>
@@ -262,41 +257,41 @@
       </div>
     `).join("");
 
+    // handlers
     grid.querySelectorAll(".card").forEach(card => {
       const id = card.dataset.id;
 
-      // clic sulla card -> modal
+      // click sulla card -> apre modal
       card.addEventListener("click", () => openProduct(id));
 
-      // bottone whatsapp: non apre modal
+      // whatsapp: NON aprire modal
       const waBtn = card.querySelector('[data-act="wa"]');
       if (waBtn) {
         waBtn.addEventListener("click", (e) => {
           e.stopPropagation();
           const p = (Store.getProducts() || []).find(x => x.id === id);
           if(!p) return;
-          window.open(waLinkForProduct(p), "_blank");
+
+          const msg =
+            `Ciao! Sono interessato a: ${p.title} — ${p.artist}. ` +
+            `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
+            `Link: ${location.href}`;
+          const url = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
+          window.open(url, "_blank");
         });
       }
 
-      // info tooltip: su tap mobile apre/chiude tooltip e NON apre modal
-      const infoBtn = card.querySelector(".info-btn");
+      // info: hover desktop via CSS + tap mobile toggla .is-open
+      const infoBtn = card.querySelector('[data-act="info"]');
       if (infoBtn) {
         infoBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-
-          const isOpen = infoBtn.classList.contains("is-open");
-          closeAllTooltips(infoBtn);
-
-          if (!isOpen) {
-            infoBtn.classList.add("is-open");
-            const tip = infoBtn.querySelector(".info-tip");
-            if (tip) tip.setAttribute("aria-hidden", "false");
-          } else {
-            infoBtn.classList.remove("is-open");
-            const tip = infoBtn.querySelector(".info-tip");
-            if (tip) tip.setAttribute("aria-hidden", "true");
-          }
+          // chiudi gli altri
+          document.querySelectorAll(".mini-info.is-open").forEach(btn => {
+            if (btn !== infoBtn) btn.classList.remove("is-open");
+          });
+          // toggle su questo
+          infoBtn.classList.toggle("is-open");
         });
       }
     });
