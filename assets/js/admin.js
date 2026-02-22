@@ -1,316 +1,401 @@
-// assets/js/admin.js
-(function(){
-  Store.requireAdminOrRedirect();
+/* assets/js/admin.js
+   Admin logic (no backend) — localStorage only
+   Features: add, edit, delete, mark sold, sold list
+*/
 
-  const path = location.pathname;
+const LS_PRODUCTS = "33giri_products_v1";
+const LS_MODELS = "33giri_models_v1";
+const LS_COLLECTIONS = "33giri_collections_v1";
+const LS_ADMIN_SESSION = "33giri_admin_ok_v1";
 
-  const $ = (id) => document.getElementById(id);
+// ---------- helpers ----------
+function readJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    console.error("JSON parse error", key, e);
+    return fallback;
+  }
+}
+function writeJSON(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+function uid() {
+  return Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+function qs(sel) { return document.querySelector(sel); }
+function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
 
-  // logout
-  const logoutBtn = $("logout");
-  if (logoutBtn){
-    logoutBtn.addEventListener("click", () => {
-      Store.setAdmin(false);
-      location.href = "../index.html";
+function requireAdmin() {
+  const ok = sessionStorage.getItem(LS_ADMIN_SESSION) === "1";
+  if (!ok) {
+    // torna a index
+    window.location.href = "../index.html";
+  }
+}
+
+// convert image file -> dataURL
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+// ---------- data ----------
+function getProducts() {
+  return readJSON(LS_PRODUCTS, []);
+}
+function setProducts(list) {
+  writeJSON(LS_PRODUCTS, list);
+}
+function getModels() {
+  return readJSON(LS_MODELS, ["Svuotatasche", "Posacenere"]);
+}
+function setModels(list) {
+  writeJSON(LS_MODELS, list);
+}
+function getCollections() {
+  return readJSON(LS_COLLECTIONS, ["Standard", "Spiral", "Splash"]);
+}
+function setCollections(list) {
+  writeJSON(LS_COLLECTIONS, list);
+}
+
+// ---------- common UI ----------
+function wireSidebarActive() {
+  const path = location.pathname.toLowerCase();
+  qsa(".nav a").forEach(a => {
+    const href = (a.getAttribute("href") || "").toLowerCase();
+    if (href && path.endsWith(href.replace("./","").replace("../",""))) {
+      a.classList.add("active");
+    }
+  });
+  const out = qs("#logoutBtn");
+  if (out) {
+    out.addEventListener("click", () => {
+      sessionStorage.removeItem(LS_ADMIN_SESSION);
+      window.location.href = "../index.html";
     });
   }
+}
 
-  // Helpers
-  function esc(str){
-    return String(str || "")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
+function fillSelectOptions(selectEl, values, placeholder) {
+  if (!selectEl) return;
+  selectEl.innerHTML = "";
+  const opt0 = document.createElement("option");
+  opt0.value = "";
+  opt0.textContent = placeholder;
+  selectEl.appendChild(opt0);
+  values.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = v;
+    selectEl.appendChild(o);
+  });
+}
 
-  function uniq(list){
-    return Array.from(new Set(list.filter(Boolean))).sort((a,b)=> String(a).localeCompare(String(b), "it"));
-  }
+// ---------- products table (products.html) ----------
+function renderProductsTable() {
+  const tbody = qs("#productsBody");
+  const search = qs("#searchProducts");
+  if (!tbody) return;
 
-  function fileToDataURL(file){
-    return new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(String(r.result));
-      r.onerror = reject;
-      r.readAsDataURL(file);
-    });
-  }
-
-  // =========================
-  // PRODUCTS PAGE
-  // =========================
-  if (path.endsWith("/admin/products.html")){
-    const tbody = $("tbody");
-    const search = $("search");
-    const total = $("total");
-
-    const editModal = $("editModal");
-    const closeEdit = $("closeEdit");
-
-    let editingId = null;
-
-    function openEdit(p){
-      editingId = p.id;
-      $("eTitle").value = p.title || "";
-      $("eArtist").value = p.artist || "";
-      $("eGenre").value = p.genre || "";
-      $("eYear").value = p.year || "";
-      $("eModel").value = p.model || "";
-      $("eCollection").value = p.collection || "";
-      $("eImg1").value = p.image1 || "";
-      $("eImg2").value = p.image2 || "";
-      $("editNote").textContent = "";
-      editModal.classList.add("open");
-    }
-
-    function closeEditFn(){
-      editModal.classList.remove("open");
-      editingId = null;
-    }
-
-    closeEdit?.addEventListener("click", closeEditFn);
-    editModal?.addEventListener("click", (e) => { if(e.target === editModal) closeEditFn(); });
-
-    $("saveEdit").addEventListener("click", () => {
-      if(!editingId) return;
-      const p = Store.getProducts().find(x => x.id === editingId);
-      if(!p) return;
-
-      Store.upsertProduct({
-        ...p,
-        title: $("eTitle").value.trim(),
-        artist: $("eArtist").value.trim(),
-        genre: $("eGenre").value.trim(),
-        year: Number($("eYear").value) || "",
-        model: $("eModel").value.trim(),
-        collection: $("eCollection").value.trim(),
-        image1: $("eImg1").value.trim(),
-        image2: $("eImg2").value.trim(),
+  function paint() {
+    const q = (search?.value || "").trim().toLowerCase();
+    const list = getProducts()
+      .filter(p => !p.soldAt)
+      .filter(p => {
+        if (!q) return true;
+        return (
+          (p.title||"").toLowerCase().includes(q) ||
+          (p.artist||"").toLowerCase().includes(q) ||
+          (p.genre||"").toLowerCase().includes(q) ||
+          (p.model||"").toLowerCase().includes(q) ||
+          (p.collection||"").toLowerCase().includes(q) ||
+          String(p.year||"").includes(q)
+        );
       });
 
-      $("editNote").textContent = "Salvato.";
-      render();
-      setTimeout(closeEditFn, 450);
-    });
+    tbody.innerHTML = "";
+    list.forEach(p => {
+      const tr = document.createElement("tr");
 
-    function matches(p){
-      const qs = (search.value || "").trim().toLowerCase();
-      if(!qs) return true;
-      const hay = `${p.title} ${p.artist} ${p.genre} ${p.model} ${p.collection} ${p.year}`.toLowerCase();
-      return hay.includes(qs);
-    }
-
-    function render(){
-      const products = Store.getProducts();
-      total.textContent = String(products.length);
-
-      const rows = products.filter(matches).map(p => {
-        const disabledSell = p.status === "sold";
-        return `
-          <tr>
-            <td>
-              <div class="row-product">
-                <div class="thumb"><img src="${esc(p.image1)}" alt=""></div>
-                <div>
-                  <div style="font-weight:950;">${esc(p.title)}</div>
-                  <div class="small-muted">${esc(p.genre)}</div>
-                </div>
-              </div>
-            </td>
-            <td>${esc(p.artist)}</td>
-            <td><span class="badge model">${esc(p.model)}</span></td>
-            <td><span class="badge collection">${esc(p.collection)}</span></td>
-            <td>${esc(p.year)}</td>
-            <td>
-              <div class="actions">
-                <span class="action-link" data-act="edit" data-id="${p.id}">✎ Modifica</span>
-                <span class="action-link green ${disabledSell ? "disabled":""}" data-act="sell" data-id="${p.id}">🛒 Vendi</span>
-                <span class="action-link red" data-act="del" data-id="${p.id}">🗑</span>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-      tbody.innerHTML = rows || `<tr><td colspan="6" style="padding:18px;color:rgba(255,255,255,.55);font-weight:800;">Nessun prodotto.</td></tr>`;
-
-      tbody.querySelectorAll("[data-act]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id = btn.dataset.id;
-          const act = btn.dataset.act;
-          const p = Store.getProducts().find(x => x.id === id);
-          if(!p) return;
-
-          if(act === "edit") openEdit(p);
-
-          if(act === "sell"){
-            if(p.status === "sold") return;
-            Store.markSold(id);
-            render();
-          }
-
-          if(act === "del"){
-            const ok = confirm("Eliminare questo prodotto?");
-            if(!ok) return;
-            Store.deleteProduct(id);
-            render();
-          }
-        });
-      });
-    }
-
-    search.addEventListener("input", render);
-    render();
-  }
-
-  // =========================
-  // ADD PAGE
-  // =========================
-  if (path.endsWith("/admin/add.html")){
-    const img1 = $("img1");
-    const img2 = $("img2");
-
-    let img1Data = "";
-    let img2Data = "";
-
-    function refreshSelects(modelsExtra = [], colsExtra = []){
-      const products = Store.getProducts();
-      const models = uniq(products.map(p => p.model).concat(modelsExtra));
-      const cols = uniq(products.map(p => p.collection).concat(colsExtra));
-
-      const ms = $("modelSelect");
-      const cs = $("collectionSelect");
-
-      ms.innerHTML = `<option value="">Seleziona modello</option>` + models.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join("");
-      cs.innerHTML = `<option value="">Seleziona collezione (opzionale)</option>` + cols.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("");
-    }
-
-    refreshSelects();
-
-    $("addModel").addEventListener("click", () => {
-      const v = $("modelNew").value.trim();
-      if(!v) return;
-      refreshSelects([v], []);
-      $("modelSelect").value = v;
-      $("modelNew").value = "";
-    });
-
-    $("addCollection").addEventListener("click", () => {
-      const v = $("collectionNew").value.trim();
-      if(!v) return;
-      refreshSelects([], [v]);
-      $("collectionSelect").value = v;
-      $("collectionNew").value = "";
-    });
-
-    img1.addEventListener("change", async () => {
-      const f = img1.files?.[0];
-      if(!f) return;
-      img1Data = await fileToDataURL(f);
-      $("drop1").textContent = "Immagine caricata ✓";
-    });
-
-    img2.addEventListener("change", async () => {
-      const f = img2.files?.[0];
-      if(!f) return;
-      img2Data = await fileToDataURL(f);
-      $("drop2").textContent = "Immagine caricata ✓";
-    });
-
-    $("save").addEventListener("click", () => {
-      const title = $("title").value.trim();
-      const artist = $("artist").value.trim();
-      const genre = $("genre").value.trim();
-      const year = $("year").value.trim();
-      const model = $("modelSelect").value.trim();
-      const collection = $("collectionSelect").value.trim();
-
-      if(!title || !artist || !genre || !year || !model){
-        $("note").textContent = "Compila tutti i campi obbligatori (*) e seleziona un modello.";
-        return;
-      }
-      if(!img1Data){
-        $("note").textContent = "Carica almeno Immagine 1 (principale).";
-        return;
-      }
-
-      Store.createProduct({
-        title, artist, genre,
-        year: Number(year),
-        model,
-        collection,
-        image1: img1Data,
-        image2: img2Data
-      });
-
-      $("note").textContent = "Prodotto salvato ✓";
-      setTimeout(() => location.href = "products.html", 450);
-    });
-  }
-
-  // =========================
-  // SOLD PAGE
-  // =========================
-  if (path.endsWith("/admin/sold.html")){
-    const totalSold = $("totalSold");
-    const searchSold = $("searchSold");
-    const soldList = $("soldList");
-
-    function matches(s){
-      const qs = (searchSold.value || "").trim().toLowerCase();
-      if(!qs) return true;
-      const hay = `${s.title} ${s.artist} ${s.genre} ${s.model} ${s.collection} ${s.year}`.toLowerCase();
-      return hay.includes(qs);
-    }
-
-    function render(){
-      const sales = Store.getSales();
-      totalSold.textContent = String(sales.length);
-
-      const html = sales.filter(matches).map(s => `
-        <div class="panel" style="padding:16px 16px; margin-top:14px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;">
-            <div class="row-product" style="gap:14px;">
-              <div class="thumb" style="width:56px;height:56px;border-radius:12px;">
-                <img src="${esc(s.image1)}" alt="">
-              </div>
-              <div>
-                <div style="font-weight:950; font-size:18px;">${esc(s.title)}</div>
-                <div class="small-muted" style="font-size:13px;">${esc(s.artist)}</div>
-                <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-                  <span class="badge model">${esc(s.model)}</span>
-                  <span class="badge collection">${esc(s.collection)}</span>
-                  <span class="small-muted">${esc(s.genre)} · ${esc(s.year)}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="small-muted" style="white-space:nowrap;">
-              🗓 ${Store.fmtDate(s.soldAt)}
+      tr.innerHTML = `
+        <td>
+          <div class="row-product">
+            <div class="thumb">${p.image1 ? `<img src="${p.image1}" alt="">` : ""}</div>
+            <div>
+              <div style="font-weight:950">${escapeHTML(p.title || "")}</div>
+              <div class="small-muted">${escapeHTML(p.genre || "")}</div>
             </div>
           </div>
+        </td>
+        <td>${escapeHTML(p.artist || "")}</td>
+        <td><span class="badge model">${escapeHTML(p.model || "")}</span></td>
+        <td>${p.collection ? `<span class="badge collection">${escapeHTML(p.collection)}</span>` : ""}</td>
+        <td>${escapeHTML(String(p.year || ""))}</td>
+        <td>
+          <div class="actions">
+            <span class="action-link" data-act="edit" data-id="${p.id}">Modifica</span>
+            <span class="action-link green" data-act="sell" data-id="${p.id}">Vendi</span>
+            <span class="action-link red" data-act="del" data-id="${p.id}">🗑</span>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
 
-          <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-            <span class="action-link" data-act="undo" data-id="${s.productId}">↩ Annulla vendita</span>
+  tbody.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const act = el.getAttribute("data-act");
+    const id = el.getAttribute("data-id");
+    if (!id) return;
+
+    if (act === "edit") {
+      window.location.href = `./add.html?edit=${encodeURIComponent(id)}`;
+    }
+    if (act === "sell") {
+      const list = getProducts();
+      const idx = list.findIndex(x => x.id === id);
+      if (idx >= 0) {
+        list[idx].soldAt = new Date().toISOString();
+        setProducts(list);
+        paint();
+      }
+    }
+    if (act === "del") {
+      if (!confirm("Eliminare questo prodotto?")) return;
+      const list = getProducts().filter(x => x.id !== id);
+      setProducts(list);
+      paint();
+    }
+  });
+
+  search?.addEventListener("input", paint);
+  paint();
+}
+
+// ---------- sold list (sold.html) ----------
+function renderSoldList() {
+  const wrap = qs("#soldWrap");
+  const search = qs("#searchSold");
+  const count = qs("#soldCount");
+  if (!wrap) return;
+
+  function paint() {
+    const q = (search?.value || "").trim().toLowerCase();
+    const sold = getProducts()
+      .filter(p => !!p.soldAt)
+      .sort((a,b) => (b.soldAt||"").localeCompare(a.soldAt||""))
+      .filter(p => {
+        if (!q) return true;
+        return (
+          (p.title||"").toLowerCase().includes(q) ||
+          (p.artist||"").toLowerCase().includes(q)
+        );
+      });
+
+    if (count) count.textContent = `${sold.length} vendite totali`;
+    wrap.innerHTML = "";
+
+    sold.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "panel";
+      card.style.padding = "14px";
+      card.style.marginTop = "12px";
+
+      const soldDate = p.soldAt ? new Date(p.soldAt) : null;
+      const soldLabel = soldDate ? soldDate.toLocaleString("it-IT") : "";
+
+      card.innerHTML = `
+        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div class="thumb" style="width:54px;height:54px">${p.image1 ? `<img src="${p.image1}" alt="">` : ""}</div>
+            <div>
+              <div style="font-weight:950;font-size:18px">${escapeHTML(p.title || "")}</div>
+              <div class="small-muted">${escapeHTML(p.artist || "")}</div>
+              <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                ${p.model ? `<span class="badge model">${escapeHTML(p.model)}</span>` : ""}
+                ${p.collection ? `<span class="badge collection">${escapeHTML(p.collection)}</span>` : ""}
+                ${p.genre ? `<span class="small-muted">${escapeHTML(p.genre)}</span>` : ""}
+                ${p.year ? `<span class="small-muted">${escapeHTML(String(p.year))}</span>` : ""}
+              </div>
+            </div>
+          </div>
+          <div class="small-muted" style="display:flex;align-items:center;gap:8px">
+            <span>🗓</span> <span>${escapeHTML(soldLabel)}</span>
           </div>
         </div>
-      `).join("");
+      `;
 
-      soldList.innerHTML = html || `<div class="panel" style="padding:18px;color:rgba(255,255,255,.55);font-weight:800;margin-top:14px;">Nessuna vendita.</div>`;
-
-      soldList.querySelectorAll("[data-act='undo']").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id = btn.dataset.id;
-          Store.undoSold(id);
-          render();
-        });
-      });
-    }
-
-    searchSold.addEventListener("input", render);
-    render();
+      wrap.appendChild(card);
+    });
   }
 
-})();
+  search?.addEventListener("input", paint);
+  paint();
+}
+
+// ---------- add/edit (add.html) ----------
+async function wireAddEditForm() {
+  const form = qs("#productForm");
+  if (!form) return;
+
+  const img1 = qs("#image1");
+  const img2 = qs("#image2");
+  const prev1 = qs("#preview1");
+  const prev2 = qs("#preview2");
+
+  const title = qs("#title");
+  const artist = qs("#artist");
+  const genre = qs("#genre");
+  const year = qs("#year");
+  const modelSel = qs("#model");
+  const colSel = qs("#collection");
+
+  const newModel = qs("#newModel");
+  const addModelBtn = qs("#addModelBtn");
+  const newCol = qs("#newCollection");
+  const addColBtn = qs("#addCollectionBtn");
+
+  const submitBtn = qs("#saveBtn");
+
+  // fill selects
+  fillSelectOptions(modelSel, getModels(), "Seleziona modello");
+  fillSelectOptions(colSel, getCollections(), "Seleziona collezione (opzionale)");
+
+  // add new model/collection
+  addModelBtn?.addEventListener("click", () => {
+    const v = (newModel?.value || "").trim();
+    if (!v) return;
+    const list = Array.from(new Set([...getModels(), v]));
+    setModels(list);
+    fillSelectOptions(modelSel, list, "Seleziona modello");
+    modelSel.value = v;
+    newModel.value = "";
+  });
+
+  addColBtn?.addEventListener("click", () => {
+    const v = (newCol?.value || "").trim();
+    if (!v) return;
+    const list = Array.from(new Set([...getCollections(), v]));
+    setCollections(list);
+    fillSelectOptions(colSel, list, "Seleziona collezione (opzionale)");
+    colSel.value = v;
+    newCol.value = "";
+  });
+
+  // previews
+  img1?.addEventListener("change", async () => {
+    const f = img1.files?.[0];
+    if (!f) return;
+    prev1 && (prev1.src = await fileToDataURL(f));
+  });
+  img2?.addEventListener("change", async () => {
+    const f = img2.files?.[0];
+    if (!f) return;
+    prev2 && (prev2.src = await fileToDataURL(f));
+  });
+
+  // edit mode?
+  const params = new URLSearchParams(location.search);
+  const editId = params.get("edit");
+  let editing = null;
+
+  if (editId) {
+    const list = getProducts();
+    editing = list.find(p => p.id === editId) || null;
+    if (editing) {
+      title.value = editing.title || "";
+      artist.value = editing.artist || "";
+      genre.value = editing.genre || "";
+      year.value = editing.year || "";
+      modelSel.value = editing.model || "";
+      colSel.value = editing.collection || "";
+
+      if (prev1 && editing.image1) prev1.src = editing.image1;
+      if (prev2 && editing.image2) prev2.src = editing.image2;
+
+      if (submitBtn) submitBtn.textContent = "Salva modifiche";
+    }
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const t = title.value.trim();
+    const a = artist.value.trim();
+    const g = genre.value.trim();
+    const y = year.value.trim();
+    const m = modelSel.value.trim();
+
+    if (!t || !a || !g || !y || !m) {
+      alert("Compila tutti i campi obbligatori (titolo, artista, genere, anno, modello).");
+      return;
+    }
+
+    // images: if new chosen -> dataURL; else keep existing in edit
+    let image1 = editing?.image1 || "";
+    let image2 = editing?.image2 || "";
+
+    if (img1?.files?.[0]) image1 = await fileToDataURL(img1.files[0]);
+    if (img2?.files?.[0]) image2 = await fileToDataURL(img2.files[0]);
+
+    if (!image1) {
+      alert("Carica almeno l'immagine 1 (principale).");
+      return;
+    }
+
+    const product = {
+      id: editing?.id || uid(),
+      title: t,
+      artist: a,
+      genre: g,
+      year: y,
+      model: m,
+      collection: colSel.value || "",
+      image1,
+      image2,
+      soldAt: editing?.soldAt || null,
+      createdAt: editing?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const list = getProducts();
+    const idx = list.findIndex(p => p.id === product.id);
+    if (idx >= 0) list[idx] = product;
+    else list.unshift(product);
+
+    setProducts(list);
+
+    alert(editing ? "Modifiche salvate ✅" : "Prodotto aggiunto ✅");
+    window.location.href = "./products.html";
+  });
+}
+
+// basic HTML escape for safe injection
+function escapeHTML(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+// ---------- boot ----------
+document.addEventListener("DOMContentLoaded", () => {
+  // Se è una pagina admin (non index) richiedo sessione
+  if (document.body.classList.contains("admin")) requireAdmin();
+
+  wireSidebarActive();
+  renderProductsTable();
+  renderSoldList();
+  wireAddEditForm();
+});
