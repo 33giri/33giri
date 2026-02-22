@@ -1,7 +1,6 @@
 // assets/js/public.js
 (function(){
   const cfg = window.APP_CONFIG;
-
   const el = (id) => document.getElementById(id);
 
   const grid = el("grid");
@@ -19,71 +18,47 @@
   el("heroTitle").textContent = cfg.heroTitle;
   el("heroSubtitle").textContent = cfg.heroSubtitle;
 
-  // -------- basePath helper (GitHub Pages /33giri/) ----------
-  function basePath() {
-    return location.pathname.includes("/33giri/") ? "/33giri/" : "/";
-  }
+  // --- Admin session key (must match admin.js)
+  const LS_ADMIN_SESSION = "33giri_admin_ok_v1";
 
-  // -------------------------------------------------------
-  // Admin modal (FIX: sessionStorage + localStorage + correct redirect)
-  // -------------------------------------------------------
+  // Admin modal
   const adminModal = el("adminModal");
-  const adminErr = el("adminErr");
-  const adminCode = el("adminCode");
-  const adminEnter = el("adminEnter");
 
-  function openAdminModal(){
+  el("openAdmin").addEventListener("click", () => {
+    el("adminErr").textContent = "";
+    el("adminCode").value = "";
     adminModal.classList.add("open");
-    adminErr.textContent = "";
-    adminCode.value = "";
-    setTimeout(() => adminCode.focus(), 50);
-  }
-  function closeAdminModal(){
-    adminModal.classList.remove("open");
-    adminErr.textContent = "";
-  }
-
-  el("openAdmin").addEventListener("click", openAdminModal);
-  el("closeAdmin").addEventListener("click", closeAdminModal);
-
-  adminModal.addEventListener("click", (e) => {
-    if (e.target === adminModal) closeAdminModal();
   });
 
-  function doAdminLogin(e){
-    if (e) e.preventDefault();
+  el("closeAdmin").addEventListener("click", () => adminModal.classList.remove("open"));
 
-    const code = adminCode.value.trim();
-    if(code === String(cfg.adminCode || "").trim()){
-      // ✅ salva su entrambi (sessione + persistenza)
-      sessionStorage.setItem("33giri_admin_ok_v1", "1");
-      localStorage.setItem("33giri_admin_ok_v1", "1");
-
-      // opzionale (se vuoi mantenerlo)
-      if (window.Store && typeof Store.setAdmin === "function") {
-        Store.setAdmin(true);
-      }
-
-      // ✅ sempre path assoluto, così non sbagli mai
-      window.location.href = basePath() + "products.html";
+  function setAdminSession(ok){
+    // tieni sia sessionStorage che localStorage così non “perdi” il login
+    if(ok){
+      sessionStorage.setItem(LS_ADMIN_SESSION, "1");
+      localStorage.setItem(LS_ADMIN_SESSION, "1");
+      if (window.Store?.setAdmin) Store.setAdmin(true);
     } else {
-      adminErr.textContent = "Codice non valido.";
+      sessionStorage.removeItem(LS_ADMIN_SESSION);
+      localStorage.removeItem(LS_ADMIN_SESSION);
+      if (window.Store?.setAdmin) Store.setAdmin(false);
     }
   }
 
-  adminEnter.addEventListener("click", doAdminLogin);
+  el("adminEnter").addEventListener("click", () => {
+    const code = el("adminCode").value.trim();
 
-  adminCode.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") doAdminLogin(e);
+    if(code === String(cfg.adminCode || "").trim()){
+      setAdminSession(true);
+
+      // redirect corretto: admin dentro /admin/
+      window.location.href = "./admin/products.html";
+    } else {
+      el("adminErr").textContent = "Codice non valido.";
+    }
   });
 
-  adminCode.addEventListener("input", () => {
-    adminErr.textContent = "";
-  });
-
-  // -------------------------------------------------------
   // Filters toggle
-  // -------------------------------------------------------
   toggleFilters.addEventListener("click", () => {
     advanced.classList.toggle("open");
   });
@@ -98,10 +73,12 @@
     const genres = uniq(products.map(p => p.genre));
     const years = uniq(products.map(p => p.year)).sort((a,b)=> Number(a)-Number(b));
 
+    const esc = (s)=> String(s).replaceAll('"','&quot;');
+
     const fill = (select, items, firstLabel) => {
       select.innerHTML =
         `<option value="">${firstLabel}</option>` +
-        items.map(x => `<option value="${String(x).replaceAll('"','&quot;')}">${x}</option>`).join("");
+        items.map(x => `<option value="${esc(x)}">${x}</option>`).join("");
     };
 
     fill(fModel, models, "Modello");
@@ -111,12 +88,12 @@
   }
 
   function matches(p){
-    // Public shows only available
-    if(p.status === "sold") return false;
+    // ✅ pubblico mostra SOLO disponibili: se soldAt esiste → venduto
+    if(p.soldAt) return false;
 
     const qs = q.value.trim().toLowerCase();
     if(qs){
-      const hay = `${p.title} ${p.artist}`.toLowerCase();
+      const hay = `${p.title||""} ${p.artist||""}`.toLowerCase();
       if(!hay.includes(qs)) return false;
     }
     if(fModel.value && p.model !== fModel.value) return false;
@@ -125,6 +102,15 @@
     if(fYear.value && String(p.year) !== String(fYear.value)) return false;
 
     return true;
+  }
+
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
   }
 
   function render(){
@@ -144,7 +130,7 @@
           <div class="card-sub">${escapeHtml(p.artist || "")}</div>
           <div class="chips">
             <span class="chip">${escapeHtml(p.model || "")}</span>
-            <span class="chip blue">${escapeHtml(p.collection || "")}</span>
+            ${p.collection ? `<span class="chip blue">${escapeHtml(p.collection || "")}</span>` : ""}
           </div>
           <div class="card-meta">
             <span>${escapeHtml(p.genre || "")}</span>
@@ -159,22 +145,9 @@
     });
   }
 
-  function escapeHtml(str){
-    return String(str)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
-  }
-
-  // -------------------------------------------------------
   // Product modal
-  // -------------------------------------------------------
   const productModal = el("productModal");
-  const closeProduct = el("closeProduct");
-
-  closeProduct.addEventListener("click", () => productModal.classList.remove("open"));
+  el("closeProduct").addEventListener("click", () => productModal.classList.remove("open"));
   productModal.addEventListener("click", (e) => {
     if(e.target === productModal) productModal.classList.remove("open");
   });
@@ -185,6 +158,7 @@
   function openProduct(id){
     const p = Store.getProducts().find(x => x.id === id);
     if(!p) return;
+
     current = p;
     showingAlt = false;
 
@@ -195,19 +169,22 @@
     el("mImg").src = p.image1 || "";
     el("mExtra").textContent = `${p.model || ""}${p.collection ? " · " + p.collection : ""}`;
 
-    const sold = p.status === "sold";
+    const sold = !!p.soldAt;
     el("mDot").classList.toggle("sold", sold);
     el("mStatusText").textContent = sold ? "Venduto" : "Disponibile - Pezzo Unico";
 
     el("whBtn").onclick = () => {
-      const msg = `Ciao! Sono interessato a: ${p.title} — ${p.artist}. Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\nLink: ${location.href}`;
+      const msg =
+        `Ciao! Sono interessato a: ${p.title} — ${p.artist}. ` +
+        `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
+        `Link: ${location.href}`;
       const url = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
       window.open(url, "_blank");
     };
 
-    el("img2Btn").style.display = (p.image2 && p.image2.trim()) ? "grid" : "none";
-    el("img2Btn").onclick = () => {
-      if(!current) return;
+    const btn2 = el("img2Btn");
+    btn2.style.display = (p.image2 && String(p.image2).trim()) ? "grid" : "none";
+    btn2.onclick = () => {
       showingAlt = !showingAlt;
       el("mImg").src = showingAlt ? (current.image2 || current.image1) : (current.image1 || current.image2);
     };
@@ -215,6 +192,7 @@
     productModal.classList.add("open");
   }
 
+  // listeners
   [q, fModel, fCollection, fGenre, fYear].forEach(x => x.addEventListener("input", render));
   [fModel, fCollection, fGenre, fYear].forEach(x => x.addEventListener("change", render));
 
