@@ -1133,7 +1133,7 @@ body.admin{
 
 /* Riduci un po' la distanza tra pallino + i + bottone */
 .card .stock{
-  gap: 8px !important;
+  gap: 6px !important;
 }
 
 /* Bottone Contattaci più piccolo (senza cambiare stile) */
