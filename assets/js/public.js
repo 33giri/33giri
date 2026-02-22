@@ -1,6 +1,6 @@
 // assets/js/public.js
 (function(){
-  const cfg = window.APP_CONFIG;
+  const cfg = window.APP_CONFIG || {};
   const el = (id) => document.getElementById(id);
 
   const grid = el("grid");
@@ -15,8 +15,8 @@
   const fYear = el("fYear");
 
   // hero texts
-  el("heroTitle").textContent = cfg.heroTitle;
-  el("heroSubtitle").textContent = cfg.heroSubtitle;
+  el("heroTitle").textContent = cfg.heroTitle || "Arte in Vinile";
+  el("heroSubtitle").textContent = cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
 
   // --- Admin session key (must match admin.js)
   const LS_ADMIN_SESSION = "33giri_admin_ok_v1";
@@ -33,7 +33,6 @@
   el("closeAdmin").addEventListener("click", () => adminModal.classList.remove("open"));
 
   function setAdminSession(ok){
-    // tieni sia sessionStorage che localStorage così non “perdi” il login
     if(ok){
       sessionStorage.setItem(LS_ADMIN_SESSION, "1");
       localStorage.setItem(LS_ADMIN_SESSION, "1");
@@ -47,11 +46,8 @@
 
   el("adminEnter").addEventListener("click", () => {
     const code = el("adminCode").value.trim();
-
     if(code === String(cfg.adminCode || "").trim()){
       setAdminSession(true);
-
-      // redirect corretto: admin dentro /admin/
       window.location.href = "./admin/products.html";
     } else {
       el("adminErr").textContent = "Codice non valido.";
@@ -88,7 +84,7 @@
   }
 
   function matches(p){
-    // ✅ pubblico mostra SOLO disponibili: se soldAt esiste → venduto
+    // pubblico mostra SOLO disponibili: se soldAt esiste → venduto
     if(p.soldAt) return false;
 
     const qs = q.value.trim().toLowerCase();
@@ -113,8 +109,90 @@
       .replaceAll("'","&#039;");
   }
 
+  // ---------------- Product modal + arrows ----------------
+  const productModal = el("productModal");
+  const closeBtn = el("closeProduct");
+  const imgPrev = el("imgPrev");
+  const imgNext = el("imgNext");
+
+  closeBtn.addEventListener("click", () => productModal.classList.remove("open"));
+  productModal.addEventListener("click", (e) => {
+    if(e.target === productModal) productModal.classList.remove("open");
+  });
+
+  let currentImages = [];
+  let imgIndex = 0;
+
+  function setModalImage(nextIndex){
+    if(!currentImages.length) return;
+
+    imgIndex = (nextIndex + currentImages.length) % currentImages.length;
+    el("mImg").src = currentImages[imgIndex];
+
+    const showNav = currentImages.length > 1;
+    if (imgPrev) imgPrev.style.display = showNav ? "grid" : "none";
+    if (imgNext) imgNext.style.display = showNav ? "grid" : "none";
+  }
+
+  function openProduct(id){
+    const p = (Store.getProducts() || []).find(x => x.id === id);
+    if(!p) return;
+
+    // immagini disponibili
+    currentImages = [];
+    if(p.image1) currentImages.push(p.image1);
+    if(p.image2 && String(p.image2).trim()) currentImages.push(p.image2);
+
+    // testo
+    el("mTitle").textContent = p.title || "";
+    el("mArtist").textContent = p.artist || "";
+    el("mGenre").textContent = p.genre || "";
+    el("mYear").textContent = p.year || "";
+    el("mExtra").textContent = `${p.model || ""}${p.collection ? " · " + p.collection : ""}`;
+
+    const sold = !!p.soldAt;
+    el("mDot").classList.toggle("sold", sold);
+    el("mStatusText").textContent = sold ? "Venduto" : "Disponibile - Pezzo Unico";
+
+    el("whBtn").onclick = () => {
+      const msg =
+        `Ciao! Sono interessato a: ${p.title} — ${p.artist}. ` +
+        `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
+        `Link: ${location.href}`;
+      const url = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
+      window.open(url, "_blank");
+    };
+
+    imgIndex = 0;
+    setModalImage(0);
+    productModal.classList.add("open");
+  }
+
+  // frecce: click (e NON chiudere il modal)
+  if(imgPrev){
+    imgPrev.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setModalImage(imgIndex - 1);
+    });
+  }
+  if(imgNext){
+    imgNext.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setModalImage(imgIndex + 1);
+    });
+  }
+
+  // tastiera (solo se modal aperto)
+  document.addEventListener("keydown", (e) => {
+    if(!productModal.classList.contains("open")) return;
+    if(e.key === "ArrowLeft") setModalImage(imgIndex - 1);
+    if(e.key === "ArrowRight") setModalImage(imgIndex + 1);
+    if(e.key === "Escape") productModal.classList.remove("open");
+  });
+
+  // ---------------- Render cards ----------------
   function render(){
-    const products = Store.getProducts();
+    const products = Store.getProducts() || [];
     populateFilters(products);
 
     const filtered = products.filter(matches);
@@ -145,54 +223,7 @@
     });
   }
 
-  // Product modal
-  const productModal = el("productModal");
-  el("closeProduct").addEventListener("click", () => productModal.classList.remove("open"));
-  productModal.addEventListener("click", (e) => {
-    if(e.target === productModal) productModal.classList.remove("open");
-  });
-
-  let current = null;
-  let showingAlt = false;
-
-  function openProduct(id){
-    const p = Store.getProducts().find(x => x.id === id);
-    if(!p) return;
-
-    current = p;
-    showingAlt = false;
-
-    el("mTitle").textContent = p.title || "";
-    el("mArtist").textContent = p.artist || "";
-    el("mGenre").textContent = p.genre || "";
-    el("mYear").textContent = p.year || "";
-    el("mImg").src = p.image1 || "";
-    el("mExtra").textContent = `${p.model || ""}${p.collection ? " · " + p.collection : ""}`;
-
-    const sold = !!p.soldAt;
-    el("mDot").classList.toggle("sold", sold);
-    el("mStatusText").textContent = sold ? "Venduto" : "Disponibile - Pezzo Unico";
-
-    el("whBtn").onclick = () => {
-      const msg =
-        `Ciao! Sono interessato a: ${p.title} — ${p.artist}. ` +
-        `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
-        `Link: ${location.href}`;
-      const url = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
-      window.open(url, "_blank");
-    };
-
-    const btn2 = el("img2Btn");
-    btn2.style.display = (p.image2 && String(p.image2).trim()) ? "grid" : "none";
-    btn2.onclick = () => {
-      showingAlt = !showingAlt;
-      el("mImg").src = showingAlt ? (current.image2 || current.image1) : (current.image1 || current.image2);
-    };
-
-    productModal.classList.add("open");
-  }
-
-  // listeners
+  // listeners filtri
   [q, fModel, fCollection, fGenre, fYear].forEach(x => x.addEventListener("input", render));
   [fModel, fCollection, fGenre, fYear].forEach(x => x.addEventListener("change", render));
 
