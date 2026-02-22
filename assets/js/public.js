@@ -19,12 +19,18 @@
   el("heroTitle").textContent = cfg.heroTitle;
   el("heroSubtitle").textContent = cfg.heroSubtitle;
 
+  // -------- basePath helper (GitHub Pages /33giri/) ----------
+  function basePath() {
+    return location.pathname.includes("/33giri/") ? "/33giri/" : "/";
+  }
+
   // -------------------------------------------------------
-  // Admin modal (FIX: sessionStorage + correct redirect)
+  // Admin modal (FIX: sessionStorage + localStorage + correct redirect)
   // -------------------------------------------------------
   const adminModal = el("adminModal");
   const adminErr = el("adminErr");
   const adminCode = el("adminCode");
+  const adminEnter = el("adminEnter");
 
   function openAdminModal(){
     adminModal.classList.add("open");
@@ -40,37 +46,35 @@
   el("openAdmin").addEventListener("click", openAdminModal);
   el("closeAdmin").addEventListener("click", closeAdminModal);
 
-  // click outside closes
   adminModal.addEventListener("click", (e) => {
     if (e.target === adminModal) closeAdminModal();
   });
 
-  function doAdminLogin(){
-    const code = adminCode.value.trim();
-    if(code === cfg.adminCode){
-      // ✅ IMPORTANT: this is what admin.js checks
-      sessionStorage.setItem("33giri_admin_ok_v1", "1");
+  function doAdminLogin(e){
+    if (e) e.preventDefault();
 
-      // (Optional: keep your Store flag if you want)
+    const code = adminCode.value.trim();
+    if(code === String(cfg.adminCode || "").trim()){
+      // ✅ salva su entrambi (sessione + persistenza)
+      sessionStorage.setItem("33giri_admin_ok_v1", "1");
+      localStorage.setItem("33giri_admin_ok_v1", "1");
+
+      // opzionale (se vuoi mantenerlo)
       if (window.Store && typeof Store.setAdmin === "function") {
         Store.setAdmin(true);
       }
 
-      // ✅ IMPORTANT: your admin pages are in ROOT, not /admin/
-      window.location.href = "products.html";
+      // ✅ sempre path assoluto, così non sbagli mai
+      window.location.href = basePath() + "products.html";
     } else {
       adminErr.textContent = "Codice non valido.";
     }
   }
 
-  el("adminEnter").addEventListener("click", doAdminLogin);
+  adminEnter.addEventListener("click", doAdminLogin);
 
-  // press Enter in input
   adminCode.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      doAdminLogin();
-    }
+    if (e.key === "Enter") doAdminLogin(e);
   });
 
   adminCode.addEventListener("input", () => {
@@ -211,7 +215,6 @@
     productModal.classList.add("open");
   }
 
-  // listeners
   [q, fModel, fCollection, fGenre, fYear].forEach(x => x.addEventListener("input", render));
   [fModel, fCollection, fGenre, fYear].forEach(x => x.addEventListener("change", render));
 
