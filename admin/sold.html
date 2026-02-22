@@ -6,7 +6,7 @@
   <title>Prodotti Venduti - 33Giri</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/33giri/assets/css/styles.css?v=1" /> 
+  <link rel="stylesheet" href="/33giri/assets/css/styles.css?v=1" />
 </head>
 
 <body class="admin">
@@ -27,19 +27,23 @@
         <a href="sold.html" class="active">🛒 Venduti</a>
       </nav>
 
-      <button class="logout" id="logout">↩ Esci</button>
+      <!-- ID corretto per admin.js -->
+      <button class="logout" id="logoutBtn">↩ Esci</button>
     </aside>
 
     <main class="main">
       <h1 class="page-title">Prodotti Venduti</h1>
-      <div class="page-sub"><span id="totalSold">0</span> vendite totali</div>
+
+      <!-- ID corretto per admin.js (testo tipo "1 vendite totali") -->
+      <div class="page-sub" id="soldCount">0 vendite totali</div>
 
       <div class="toolbar">
         <div></div>
         <input class="admin-search" id="searchSold" placeholder="Cerca vendite..." />
       </div>
 
-      <div id="soldList"></div>
+      <!-- ID corretto per admin.js -->
+      <div id="soldWrap"></div>
     </main>
   </div>
 
