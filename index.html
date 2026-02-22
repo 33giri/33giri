@@ -9,14 +9,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
-  <!-- GitHub Pages repo /33giri/ + cache bust -->
-  <link rel="stylesheet" href="/33giri/assets/css/styles.css?v=10" />
-</head>
-
+  <!-- ✅ FIX GitHub Pages (repo /33giri/) + cache bust -->
+  <link rel="stylesheet" href="/33giri/assets/css/styles.css?v=2" />
+</head> 
+ 
 <body class="public">
   <header class="topbar">
     <div class="container topbar-inner">
       <div class="brand">
+        <!-- ✅ FIX: dimensioni esplicite per evitare mega-logo se CSS non carica -->
         <svg width="34" height="34" viewBox="0 0 64 64" fill="none" aria-hidden="true">
           <circle cx="32" cy="32" r="26" stroke="#0f4a5e" stroke-width="4"/>
           <circle cx="32" cy="32" r="7" stroke="#0f4a5e" stroke-width="4"/>
@@ -24,7 +25,8 @@
         <span>33Giri Catalogo</span>
       </div>
 
-      <button class="icon-btn" id="openAdmin" title="Admin" aria-label="Apri Admin">
+      <button class="icon-btn" id="openAdmin" title="Admin">
+        <!-- lock -->
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M7 10V8a5 5 0 0 1 10 0v2" stroke="#0f4a5e" stroke-width="2" stroke-linecap="round"/>
           <path d="M6 10h12v10H6V10Z" stroke="#0f4a5e" stroke-width="2" stroke-linejoin="round"/>
@@ -44,7 +46,8 @@
     <div class="container">
       <div class="filters-row">
         <input id="q" class="search" placeholder="Cerca per titolo o artista..." />
-        <button class="filter-btn" id="toggleFilters" type="button">
+        <button class="filter-btn" id="toggleFilters">
+          <!-- filter icon -->
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M4 6h16M7 12h10M10 18h4" stroke="#0d3b4b" stroke-width="2" stroke-linecap="round"/>
           </svg>
@@ -55,10 +58,18 @@
 
       <div class="filters-advanced" id="advanced">
         <div class="selects">
-          <select class="select" id="fModel"><option value="">Modello</option></select>
-          <select class="select" id="fCollection"><option value="">Collezione</option></select>
-          <select class="select" id="fGenre"><option value="">Genere</option></select>
-          <select class="select" id="fYear"><option value="">Anno</option></select>
+          <select class="select" id="fModel">
+            <option value="">Modello</option>
+          </select>
+          <select class="select" id="fCollection">
+            <option value="">Collezione</option>
+          </select>
+          <select class="select" id="fGenre">
+            <option value="">Genere</option>
+          </select>
+          <select class="select" id="fYear">
+            <option value="">Anno</option>
+          </select>
         </div>
       </div>
     </div>
@@ -74,15 +85,11 @@
   <!-- PRODUCT MODAL -->
   <div class="modal-backdrop" id="productModal">
     <div class="modal">
-      <button class="modal-close" id="closeProduct" type="button">✕</button>
-
+      <button class="modal-close" id="closeProduct">✕</button>
       <div class="modal-grid">
         <div class="modal-img">
-          <button class="img-nav prev" id="imgPrev" type="button" aria-label="Immagine precedente">‹</button>
           <img id="mImg" alt="">
-          <button class="img-nav next" id="imgNext" type="button" aria-label="Immagine successiva">›</button>
         </div>
-
         <div class="modal-content">
           <h2 id="mTitle"></h2>
           <div class="modal-artist" id="mArtist"></div>
@@ -109,7 +116,8 @@
             </div>
           </div>
 
-          <button class="whatsapp-btn" id="whBtn" type="button">
+          <button class="whatsapp-btn" id="whBtn">
+            <!-- whatsapp icon -->
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M12 2a9 9 0 0 0-7.8 13.5L3 22l6.7-1.8A9 9 0 1 0 12 2Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
               <path d="M8.6 9.1c.2-.6.5-.6.7-.6h.6c.2 0 .4 0 .6.4.2.4.8 1.9.8 2 0 .2.1.4-.1.6-.2.2-.3.4-.5.6-.2.2-.4.4-.2.7.2.3.9 1.5 2 2.4 1.4 1.2 2.6 1.6 3 .1.4-.2.7-.9.9-1.2.2-.3.4-.2.6-.1.2.1 1.4.7 1.6.8.2.1.4.2.4.4 0 .2 0 1.1-.8 1.7-.8.6-1.5.7-2.1.6-.6-.1-2.1-.7-3.6-2.1-1.7-1.5-2.8-3.4-3-3.9-.2-.5-.6-1.4-.6-2.1 0-.7.2-1.3.4-1.7Z" fill="white"/>
@@ -118,6 +126,8 @@
           </button>
 
           <div class="modal-note" id="mExtra"></div>
+
+          <button class="info-fab" id="img2Btn" title="Seconda immagine">i</button>
         </div>
       </div>
     </div>
@@ -126,18 +136,19 @@
   <!-- ADMIN LOGIN MODAL -->
   <div class="modal-backdrop" id="adminModal">
     <div class="modal small">
-      <button class="modal-close" id="closeAdmin" type="button">✕</button>
+      <button class="modal-close" id="closeAdmin">✕</button>
       <div class="modal-content" style="padding:24px;">
         <h2 style="font-size:18px;letter-spacing:0;margin:0 0 14px;color:#0e1626;">Accesso Admin</h2>
         <input id="adminCode" class="search" style="height:46px;" placeholder="Inserisci il codice" />
-        <button class="primary-btn" id="adminEnter" style="margin-top:14px;width:100%;" type="button">Accedi</button>
+        <button class="primary-btn" id="adminEnter" style="margin-top:14px;width:100%;">Accedi</button>
         <div class="modal-note" id="adminErr" style="color:rgba(14,22,38,.6)"></div>
       </div>
     </div>
   </div>
 
-  <script src="/33giri/assets/js/config.js?v=10"></script>
-  <script src="/33giri/assets/js/store.js?v=10"></script>
-  <script src="/33giri/assets/js/public.js?v=10"></script>
+  <!-- ✅ FIX GitHub Pages: usa path assoluti -->
+  <script src="/33giri/assets/js/config.js?v=3"></script>
+  <script src="/33giri/assets/js/store.js?v=2"></script>
+  <script src="/33giri/assets/js/public.js?v=2"></script>
 </body>
 </html>
