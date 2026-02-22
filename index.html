@@ -1,134 +1,149 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>33Giri — Oggetti di design nati dai vinili</title>
-  <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>33Giri Catalogo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css" />
 </head>
-<body>
-  <!-- NAV -->
-  <header>
-    <nav class="nav">
-      <a href="index.html" class="brand">33Giri</a>
-      <div class="menu">
-        <a href="catalogo.html">Catalogo</a>
-        <a href="quiz.html">33Quiz</a>
-        <a href="collaborazioni.html">Collaborazioni</a>
-        <a href="chisiamo.html">Chi siamo</a>
+
+<body class="public">
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <circle cx="32" cy="32" r="26" stroke="#0f4a5e" stroke-width="4"/>
+          <circle cx="32" cy="32" r="7" stroke="#0f4a5e" stroke-width="4"/>
+        </svg>
+        <span>33Giri Catalogo</span>
       </div>
-    </nav>
+
+      <button class="icon-btn" id="openAdmin" title="Admin">
+        <!-- lock -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M7 10V8a5 5 0 0 1 10 0v2" stroke="#0f4a5e" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6 10h12v10H6V10Z" stroke="#0f4a5e" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
-  <main>
-    <!-- 1) HERO immagine + headline -->
-    <section class="hero-img">
-      <!-- SOSTITUISCI l'URL con la tua foto full-bleed -->
-      <div class="hero-img-bg" style="--img:url('https://images.unsplash.com/photo-1524234107056-1c1f48f64ab7?q=80&w=2400&auto=format&fit=crop')"></div>
-      <div class="hero-img-overlay"></div>
-      <div class="hero-img-text">
-        <h1>Oggetti di design nati dai vinili.<br>Dove la musica incontra la forma.</h1>
+  <section class="hero">
+    <div class="container" style="text-align:center;">
+      <h1 id="heroTitle">Arte in Vinile</h1>
+      <p id="heroSubtitle">Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.</p>
+    </div>
+  </section>
+
+  <section class="filters">
+    <div class="container">
+      <div class="filters-row">
+        <input id="q" class="search" placeholder="Cerca per titolo o artista..." />
+        <button class="filter-btn" id="toggleFilters">
+          <!-- filter icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M4 6h16M7 12h10M10 18h4" stroke="#0d3b4b" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Filtri
+          <span id="chev">^</span>
+        </button>
       </div>
-    </section>
 
-    <!-- 2) CATALOGO (4 categorie) -->
-    <section class="section">
-      <div class="wrap">
-        <h2 class="section-title">Collezione Made in Italy</h2>
-        <div class="grid cols-2" id="catalog-categories"></div>
-      </div>
-    </section>
-
-    <!-- 3) CITAZIONE -->
-    <section class="section">
-      <div class="wrap center">
-        <h3 class="quote">
-          “Ogni vinile racconta una storia. Noi la trasformiamo in forma, colore e materia.”
-        </h3>
-        <p class="lead">
-          Ogni pezzo 33Giri è unico, modellato a mano e nato per dare nuova vita alla musica che ha fatto vibrare generazioni.
-        </p>
-        <a class="btn ghost" href="catalogo.html">Acquista ora</a>
-      </div>
-    </section>
-
-    <!-- 4) NASTRO FRASI ORIZZONTALI -->
-    <section class="scrolling-text" aria-label="Frasi 33Giri">
-      <div class="scroll-container">
-        <p>
-          Crediamo in un design che racconta storie, non mode. —
-          La forma incontra la musica, la musica diventa materia. —
-          Un vinile non si butta: si trasforma. —
-        </p>
-      </div>
-    </section>
-
-    <!-- 5) IMMAGINI CON SCRITTE (3 box) -->
-    <section class="section">
-      <div class="wrap">
-        <div class="grid cols-3 feature-grid">
-          <!-- Sostituisci gli URL con le tue foto -->
-          <article class="feature">
-            <div class="feature-img" style="--img:url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop')"></div>
-            <h4>Ogni pezzo, uno su uno</h4>
-            <p>Nessun modello, nessuna replica: ogni vinile è trasformato a mano.</p>
-          </article>
-
-          <article class="feature">
-            <div class="feature-img" style="--img:url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1600&auto=format&fit=crop')"></div>
-            <h4>Design consapevole</h4>
-            <p>Usiamo vinili autentici, recuperati e reinterpretati con equilibrio tra forma e sostenibilità.</p>
-          </article>
-
-          <article class="feature">
-            <div class="feature-img" style="--img:url('https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1600&auto=format&fit=crop')"></div>
-            <h4>Fatti a mano in Italia</h4>
-            <p>Creati nel nostro laboratorio: ogni gesto racconta chi siamo.</p>
-          </article>
+      <div class="filters-advanced" id="advanced">
+        <div class="selects">
+          <select class="select" id="fModel">
+            <option value="">Modello</option>
+          </select>
+          <select class="select" id="fCollection">
+            <option value="">Collezione</option>
+          </select>
+          <select class="select" id="fGenre">
+            <option value="">Genere</option>
+          </select>
+          <select class="select" id="fYear">
+            <option value="">Anno</option>
+          </select>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- 6) CONTATTI -->
-    <section class="section contact">
-      <div class="wrap">
-        <h2 class="section-title center">Realizziamo insieme il tuo vinile ideale. <br>Contattaci!</h2>
-        <form class="contact-form" action="https://formspree.io/f/your-id" method="POST">
-          <!-- Se non usi Formspree, cambia action con mailto: o backend -->
-          <div class="grid cols-2">
-            <input type="text" name="nome" placeholder="Nome" required>
-            <input type="email" name="email" placeholder="Email" required>
+  <section class="list">
+    <div class="container">
+      <div class="count"><span id="count">0</span> prodotti trovati</div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <!-- PRODUCT MODAL -->
+  <div class="modal-backdrop" id="productModal">
+    <div class="modal">
+      <button class="modal-close" id="closeProduct">✕</button>
+      <div class="modal-grid">
+        <div class="modal-img">
+          <img id="mImg" alt="">
+        </div>
+        <div class="modal-content">
+          <h2 id="mTitle"></h2>
+          <div class="modal-artist" id="mArtist"></div>
+
+          <div class="info-grid">
+            <div class="info-box">
+              <div>
+                <div class="info-label">GENERE</div>
+                <div class="info-value" id="mGenre"></div>
+              </div>
+            </div>
+            <div class="info-box">
+              <div>
+                <div class="info-label">ANNO</div>
+                <div class="info-value" id="mYear"></div>
+              </div>
+            </div>
           </div>
-          <input type="tel" name="telefono" placeholder="Telefono">
-          <textarea name="messaggio" rows="6" placeholder="Commento"></textarea>
-          <button class="btn" type="submit">Invia</button>
-        </form>
-      </div>
-    </section>
-  </main>
 
-  <footer>
-    <p>© 33Giri — fatto a mano in Italia</p>
-  </footer>
+          <div class="status-row">
+            <div class="status">
+              <span class="dot" id="mDot"></span>
+              <span id="mStatusText">Disponibile - Pezzo Unico</span>
+            </div>
+          </div>
 
-  <script>
-    /* ==== CATEGORIE CATALOGO (4 card) ==== */
-    const CATEGORIES = [
-      { title:'Standard', image:'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1600&auto=format&fit=crop' },
-      { title:'Splash',   image:'https://images.unsplash.com/photo-1544027993-37dbfe43562a?q=80&w=1600&auto=format&fit=crop' },
-      { title:'Spiral',   image:'https://images.unsplash.com/photo-1541542684-4a63452b09bf?q=80&w=1600&auto=format&fit=crop' },
-      { title:'Disegni',  image:'https://images.unsplash.com/photo-1526312426976-593c2ebc1f59?q=80&w=1600&auto=format&fit=crop' }
-    ];
-    const grid = document.getElementById('catalog-categories');
-    grid.innerHTML = CATEGORIES.map(c => `
-      <article class="card cat">
-        <div class="thumb" style="--img:url('${c.image}')"></div>
-        <div class="body">
-          <span class="pill">${c.title}</span>
+          <button class="whatsapp-btn" id="whBtn">
+            <!-- whatsapp icon -->
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2a9 9 0 0 0-7.8 13.5L3 22l6.7-1.8A9 9 0 1 0 12 2Z" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M8.6 9.1c.2-.6.5-.6.7-.6h.6c.2 0 .4 0 .6.4.2.4.8 1.9.8 2 0 .2.1.4-.1.6-.2.2-.3.4-.5.6-.2.2-.4.4-.2.7.2.3.9 1.5 2 2.4 1.4 1.2 2.6 1.6 3 .1.4-.2.7-.9.9-1.2.2-.3.4-.2.6-.1.2.1 1.4.7 1.6.8.2.1.4.2.4.4 0 .2 0 1.1-.8 1.7-.8.6-1.5.7-2.1.6-.6-.1-2.1-.7-3.6-2.1-1.7-1.5-2.8-3.4-3-3.9-.2-.5-.6-1.4-.6-2.1 0-.7.2-1.3.4-1.7Z" fill="white"/>
+            </svg>
+            Contattaci su WhatsApp
+          </button>
+
+          <div class="modal-note" id="mExtra"></div>
+
+          <button class="info-fab" id="img2Btn" title="Seconda immagine">i</button>
         </div>
-      </article>
-    `).join('');
-  </script>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div class="modal-backdrop" id="adminModal">
+    <div class="modal small">
+      <button class="modal-close" id="closeAdmin">✕</button>
+      <div class="modal-content" style="padding:24px;">
+        <h2 style="font-size:18px;letter-spacing:0;margin:0 0 14px;color:#0e1626;">Accesso Admin</h2>
+        <input id="adminCode" class="search" style="height:46px;" placeholder="Inserisci il codice" />
+        <button class="primary-btn" id="adminEnter" style="margin-top:14px;width:100%;">Accedi</button>
+        <div class="modal-note" id="adminErr" style="color:rgba(14,22,38,.6)"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/public.js"></script>
 </body>
 </html>
