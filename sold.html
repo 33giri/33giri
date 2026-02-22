@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prodotti Venduti - 33Giri</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+
+<body class="admin">
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+          <circle cx="32" cy="32" r="26" stroke="#9cd79c" stroke-width="4"/>
+          <circle cx="32" cy="32" r="7" stroke="#9cd79c" stroke-width="4"/>
+        </svg>
+        <span>33Giri Catalogo</span>
+      </div>
+      <small>Pannello Admin</small>
+
+      <nav class="nav">
+        <a href="products.html">▦ Prodotti</a>
+        <a href="add.html">＋ Aggiungi</a>
+        <a href="sold.html" class="active">🛒 Venduti</a>
+      </nav>
+
+      <button class="logout" id="logout">↩ Esci</button>
+    </aside>
+
+    <main class="main">
+      <h1 class="page-title">Prodotti Venduti</h1>
+      <div class="page-sub"><span id="totalSold">0</span> vendite totali</div>
+
+      <div class="toolbar">
+        <div></div>
+        <input class="admin-search" id="searchSold" placeholder="Cerca vendite..." />
+      </div>
+
+      <div id="soldList"></div>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/store.js"></script>
+  <script src="../assets/js/admin.js"></script>
+</body>
+</html>
