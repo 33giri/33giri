@@ -27,25 +27,13 @@ function uid() {
 function qs(sel) { return document.querySelector(sel); }
 function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
 
-/* ✅ NEW: base path helper (GitHub Pages project site /33giri/) */
-function basePath() {
-  return location.pathname.includes("/33giri/") ? "/33giri/" : "/";
-}
-
 function requireAdmin() {
-  const okSession = sessionStorage.getItem(LS_ADMIN_SESSION) === "1";
-  const okLocal = localStorage.getItem(LS_ADMIN_SESSION) === "1";
-
-  if (okSession) return;
-
-  // ✅ fallback persistente: ricrea la sessione
-  if (okLocal) {
-    sessionStorage.setItem(LS_ADMIN_SESSION, "1");
-    return;
+  // ✅ accetta sia sessionStorage che localStorage
+  const ok = sessionStorage.getItem(LS_ADMIN_SESSION) === "1" || localStorage.getItem(LS_ADMIN_SESSION) === "1";
+  if (!ok) {
+    // torna alla home pubblica (root)
+    window.location.href = "../index.html";
   }
-
-  window.location.href = basePath() + "index.html";
-}
 }
 
 // convert image file -> dataURL
@@ -59,40 +47,32 @@ function fileToDataURL(file) {
 }
 
 // ---------- data ----------
-function getProducts() {
-  return readJSON(LS_PRODUCTS, []);
-}
-function setProducts(list) {
-  writeJSON(LS_PRODUCTS, list);
-}
-function getModels() {
-  return readJSON(LS_MODELS, ["Svuotatasche", "Posacenere"]);
-}
-function setModels(list) {
-  writeJSON(LS_MODELS, list);
-}
-function getCollections() {
-  return readJSON(LS_COLLECTIONS, ["Standard", "Spiral", "Splash"]);
-}
-function setCollections(list) {
-  writeJSON(LS_COLLECTIONS, list);
-}
+function getProducts() { return readJSON(LS_PRODUCTS, []); }
+function setProducts(list) { writeJSON(LS_PRODUCTS, list); }
+
+function getModels() { return readJSON(LS_MODELS, ["Svuotatasche", "Posacenere"]); }
+function setModels(list) { writeJSON(LS_MODELS, list); }
+
+function getCollections() { return readJSON(LS_COLLECTIONS, ["Standard", "Spiral", "Splash"]); }
+function setCollections(list) { writeJSON(LS_COLLECTIONS, list); }
 
 // ---------- common UI ----------
 function wireSidebarActive() {
   const path = location.pathname.toLowerCase();
   qsa(".nav a").forEach(a => {
     const href = (a.getAttribute("href") || "").toLowerCase();
-    if (href && path.endsWith(href.replace("./","").replace("../",""))) {
+    if (href && path.endsWith("/" + href.replace("./","").replace("../",""))) {
       a.classList.add("active");
     }
   });
 
-  const out = qs("#logoutBtn");
+  // ✅ supporta sia #logout che #logoutBtn
+  const out = qs("#logout") || qs("#logoutBtn");
   if (out) {
     out.addEventListener("click", () => {
       sessionStorage.removeItem(LS_ADMIN_SESSION);
-      window.location.href = basePath() + "index.html";
+      localStorage.removeItem(LS_ADMIN_SESSION);
+      window.location.href = "../index.html";
     });
   }
 }
@@ -104,12 +84,23 @@ function fillSelectOptions(selectEl, values, placeholder) {
   opt0.value = "";
   opt0.textContent = placeholder;
   selectEl.appendChild(opt0);
+
   values.forEach(v => {
     const o = document.createElement("option");
     o.value = v;
     o.textContent = v;
     selectEl.appendChild(o);
   });
+}
+
+// basic HTML escape for safe injection
+function escapeHTML(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 // ---------- products table (products.html) ----------
@@ -137,7 +128,6 @@ function renderProductsTable() {
     tbody.innerHTML = "";
     list.forEach(p => {
       const tr = document.createElement("tr");
-
       tr.innerHTML = `
         <td>
           <div class="row-product">
@@ -258,34 +248,41 @@ function renderSoldList() {
 
 // ---------- add/edit (add.html) ----------
 async function wireAddEditForm() {
-  const form = qs("#productForm");
-  if (!form) return;
+  // ✅ usa i tuoi ID reali
+  const saveBtn = qs("#save");
+  const note = qs("#note");
 
-  const img1 = qs("#image1");
-  const img2 = qs("#image2");
-  const prev1 = qs("#preview1");
-  const prev2 = qs("#preview2");
+  const img1 = qs("#img1");
+  const img2 = qs("#img2");
+  const drop1 = qs("#drop1");
+  const drop2 = qs("#drop2");
 
   const title = qs("#title");
   const artist = qs("#artist");
   const genre = qs("#genre");
   const year = qs("#year");
-  const modelSel = qs("#model");
-  const colSel = qs("#collection");
+  const modelSel = qs("#modelSelect");
+  const colSel = qs("#collectionSelect");
 
-  const newModel = qs("#newModel");
-  const addModelBtn = qs("#addModelBtn");
-  const newCol = qs("#newCollection");
-  const addColBtn = qs("#addCollectionBtn");
+  const newModel = qs("#modelNew");
+  const addModelBtn = qs("#addModel");
+  const newCol = qs("#collectionNew");
+  const addColBtn = qs("#addCollection");
 
-  const submitBtn = qs("#saveBtn");
+  // se non siamo su add.html, esci
+  if (!saveBtn || !title || !artist || !genre || !year || !modelSel || !colSel) return;
+
+  function setNote(msg){
+    if(note) note.textContent = msg || "";
+  }
 
   // fill selects
   fillSelectOptions(modelSel, getModels(), "Seleziona modello");
   fillSelectOptions(colSel, getCollections(), "Seleziona collezione (opzionale)");
 
   // add new model/collection
-  addModelBtn?.addEventListener("click", () => {
+  addModelBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
     const v = (newModel?.value || "").trim();
     if (!v) return;
     const list = Array.from(new Set([...getModels(), v]));
@@ -295,7 +292,8 @@ async function wireAddEditForm() {
     newModel.value = "";
   });
 
-  addColBtn?.addEventListener("click", () => {
+  addColBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
     const v = (newCol?.value || "").trim();
     if (!v) return;
     const list = Array.from(new Set([...getCollections(), v]));
@@ -305,16 +303,27 @@ async function wireAddEditForm() {
     newCol.value = "";
   });
 
-  // previews
+  // previews inside drop labels
+  async function paintDrop(label, file){
+    if(!label || !file) return;
+    const url = await fileToDataURL(file);
+    label.style.backgroundImage = `url('${url}')`;
+    label.style.backgroundSize = "cover";
+    label.style.backgroundPosition = "center";
+    label.style.color = "transparent";
+    label.style.borderStyle = "solid";
+    return url;
+  }
+
   img1?.addEventListener("change", async () => {
     const f = img1.files?.[0];
     if (!f) return;
-    prev1 && (prev1.src = await fileToDataURL(f));
+    await paintDrop(drop1, f);
   });
   img2?.addEventListener("change", async () => {
     const f = img2.files?.[0];
     if (!f) return;
-    prev2 && (prev2.src = await fileToDataURL(f));
+    await paintDrop(drop2, f);
   });
 
   // edit mode?
@@ -333,28 +342,39 @@ async function wireAddEditForm() {
       modelSel.value = editing.model || "";
       colSel.value = editing.collection || "";
 
-      if (prev1 && editing.image1) prev1.src = editing.image1;
-      if (prev2 && editing.image2) prev2.src = editing.image2;
+      if (drop1 && editing.image1) {
+        drop1.style.backgroundImage = `url('${editing.image1}')`;
+        drop1.style.backgroundSize = "cover";
+        drop1.style.backgroundPosition = "center";
+        drop1.style.color = "transparent";
+      }
+      if (drop2 && editing.image2) {
+        drop2.style.backgroundImage = `url('${editing.image2}')`;
+        drop2.style.backgroundSize = "cover";
+        drop2.style.backgroundPosition = "center";
+        drop2.style.color = "transparent";
+      }
 
-      if (submitBtn) submitBtn.textContent = "Salva modifiche";
+      saveBtn.textContent = "Salva modifiche";
+      setNote("");
     }
   }
 
-  form.addEventListener("submit", async (e) => {
+  saveBtn.addEventListener("click", async (e) => {
     e.preventDefault();
+    setNote("");
 
     const t = title.value.trim();
     const a = artist.value.trim();
     const g = genre.value.trim();
-    const y = year.value.trim();
-    const m = modelSel.value.trim();
+    const y = String(year.value).trim();
+    const m = String(modelSel.value).trim();
 
     if (!t || !a || !g || !y || !m) {
       alert("Compila tutti i campi obbligatori (titolo, artista, genere, anno, modello).");
       return;
     }
 
-    // images: if new chosen -> dataURL; else keep existing in edit
     let image1 = editing?.image1 || "";
     let image2 = editing?.image2 || "";
 
@@ -393,19 +413,8 @@ async function wireAddEditForm() {
   });
 }
 
-// basic HTML escape for safe injection
-function escapeHTML(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 // ---------- boot ----------
 document.addEventListener("DOMContentLoaded", () => {
-  // Se è una pagina admin (non index) richiedo sessione
   if (document.body.classList.contains("admin")) requireAdmin();
 
   wireSidebarActive();
