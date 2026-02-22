@@ -27,7 +27,8 @@
         <a href="sold.html">🛒 Venduti</a>
       </nav>
 
-      <button class="logout" id="logout">↩ Esci</button>
+      <!-- ID corretto per admin.js -->
+      <button class="logout" id="logoutBtn">↩ Esci</button>
     </aside>
 
     <main class="main">
@@ -36,7 +37,9 @@
 
       <div class="toolbar">
         <div></div>
-        <input class="admin-search" id="search" placeholder="Cerca prodotti..." />
+
+        <!-- ID corretto per admin.js -->
+        <input class="admin-search" id="searchProducts" placeholder="Cerca prodotti..." />
       </div>
 
       <div class="panel">
@@ -51,13 +54,15 @@
               <th>AZIONI</th>
             </tr>
           </thead>
-          <tbody id="tbody"></tbody>
+
+          <!-- ID corretto per admin.js -->
+          <tbody id="productsBody"></tbody>
         </table>
       </div>
     </main>
   </div>
 
-  <!-- EDIT MODAL -->
+  <!-- EDIT MODAL (non usato dal tuo admin.js attuale, ma lo lascio identico) -->
   <div class="modal-backdrop" id="editModal">
     <div class="modal small">
       <button class="modal-close" id="closeEdit">✕</button>
@@ -108,5 +113,16 @@
   <script src="../assets/js/config.js"></script>
   <script src="../assets/js/store.js"></script>
   <script src="../assets/js/admin.js"></script>
+
+  <!-- Aggiorna contatore totale (compat col tuo HTML) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      try {
+        const list = (window.Store?.getProducts ? Store.getProducts() : []);
+        const totalEl = document.getElementById("total");
+        if (totalEl) totalEl.textContent = String(list.filter(p => !p.soldAt).length);
+      } catch {}
+    });
+  </script>
 </body>
 </html>
