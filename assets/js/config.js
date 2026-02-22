@@ -12,7 +12,7 @@ window.APP_CONFIG = {
 
   // ✅ Supabase
   supabaseUrl: "https://oovqibecarfdoybzbqwt.supabase.co",
-  supabaseAnonKey: "INCOLLA_QUI_LA_ANON_KEY",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vdnFpYmVjYXJmZG95YnpicXd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NjU1MDQsImV4cCI6MjA4NzM0MTUwNH0.yym_Y9i6Pl-dxicCxPXnWVg6E69RLYpyKBw7AWzq4wI",
   supabaseProductsTable: "products"
 };
 
