@@ -16,7 +16,8 @@
 
   // hero texts
   el("heroTitle").textContent = cfg.heroTitle || "Arte in Vinile";
-  el("heroSubtitle").textContent = cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
+  el("heroSubtitle").textContent =
+    cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
 
   // --- Admin session key (must match admin.js)
   const LS_ADMIN_SESSION = "33giri_admin_ok_v1";
@@ -109,6 +110,14 @@
       .replaceAll("'","&#039;");
   }
 
+  function waLinkForProduct(p){
+    const msg =
+      `Ciao! Sono interessato a: ${p.title || "-"} — ${p.artist || "-"}. ` +
+      `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
+      `Link: ${location.href}`;
+    return `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
+  }
+
   // ---------------- Product modal + arrows ----------------
   const productModal = el("productModal");
   const closeBtn = el("closeProduct");
@@ -154,14 +163,7 @@
     el("mDot").classList.toggle("sold", sold);
     el("mStatusText").textContent = sold ? "Venduto" : "Disponibile - Pezzo Unico";
 
-    el("whBtn").onclick = () => {
-      const msg =
-        `Ciao! Sono interessato a: ${p.title} — ${p.artist}. ` +
-        `Modello: ${p.model || "-"}, Collezione: ${p.collection || "-"}, Anno: ${p.year || "-"}.\n` +
-        `Link: ${location.href}`;
-      const url = `https://wa.me/${cfg.whatsappNumber}?text=${encodeURIComponent(msg)}`;
-      window.open(url, "_blank");
-    };
+    el("whBtn").onclick = () => window.open(waLinkForProduct(p), "_blank");
 
     imgIndex = 0;
     setModalImage(0);
@@ -190,6 +192,27 @@
     if(e.key === "Escape") productModal.classList.remove("open");
   });
 
+  // ---------------- Tooltip "i" in card: hover desktop + tap mobile ----------------
+  const TOOLTIP_TEXT = "Modello standard, personalizzabile su richiesta";
+
+  function closeAllTooltips(exceptBtn){
+    document.querySelectorAll(".info-btn.is-open").forEach(btn => {
+      if (exceptBtn && btn === exceptBtn) return;
+      btn.classList.remove("is-open");
+      const tip = btn.querySelector(".info-tip");
+      if (tip) tip.setAttribute("aria-hidden", "true");
+    });
+  }
+
+  // chiudi tooltip cliccando fuori
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".info-btn");
+    if (!btn) closeAllTooltips();
+  });
+
+  // chiudi tooltip quando scrolli (mobile)
+  window.addEventListener("scroll", () => closeAllTooltips(), { passive: true });
+
   // ---------------- Render cards ----------------
   function render(){
     const products = Store.getProducts() || [];
@@ -203,23 +226,79 @@
         <div class="card-img">
           <img src="${p.image1 || ""}" alt="">
         </div>
+
         <div class="card-body">
           <h3 class="card-title">${escapeHtml(p.title || "")}</h3>
           <div class="card-sub">${escapeHtml(p.artist || "")}</div>
+
           <div class="chips">
             <span class="chip">${escapeHtml(p.model || "")}</span>
             ${p.collection ? `<span class="chip blue">${escapeHtml(p.collection || "")}</span>` : ""}
           </div>
+
           <div class="card-meta">
             <span>${escapeHtml(p.genre || "")}</span>
             <span>${escapeHtml(String(p.year || ""))}</span>
+          </div>
+
+          <div class="card-actions">
+            <div class="stock">
+              <span class="dot"></span>
+              <span class="stock-text">In Stock: 1</span>
+
+              <!-- ✅ i + tooltip -->
+              <button class="info-btn" type="button" aria-label="Info">
+                i
+                <span class="info-tip" aria-hidden="true">${TOOLTIP_TEXT}</span>
+              </button>
+            </div>
+
+            <!-- ✅ bottone contattaci dentro card -->
+            <button class="mini-wa" type="button" data-act="wa" aria-label="Contattaci su WhatsApp">
+              Contattaci
+            </button>
           </div>
         </div>
       </div>
     `).join("");
 
     grid.querySelectorAll(".card").forEach(card => {
-      card.addEventListener("click", () => openProduct(card.dataset.id));
+      const id = card.dataset.id;
+
+      // clic sulla card -> modal
+      card.addEventListener("click", () => openProduct(id));
+
+      // bottone whatsapp: non apre modal
+      const waBtn = card.querySelector('[data-act="wa"]');
+      if (waBtn) {
+        waBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const p = (Store.getProducts() || []).find(x => x.id === id);
+          if(!p) return;
+          window.open(waLinkForProduct(p), "_blank");
+        });
+      }
+
+      // info tooltip: su tap mobile apre/chiude tooltip e NON apre modal
+      const infoBtn = card.querySelector(".info-btn");
+      if (infoBtn) {
+        infoBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+
+          const isOpen = infoBtn.classList.contains("is-open");
+          closeAllTooltips(infoBtn);
+
+          if (!isOpen) {
+            infoBtn.classList.add("is-open");
+            const tip = infoBtn.querySelector(".info-tip");
+            if (tip) tip.setAttribute("aria-hidden", "false");
+          } else {
+            infoBtn.classList.remove("is-open");
+            const tip = infoBtn.querySelector(".info-tip");
+            if (tip) tip.setAttribute("aria-hidden", "true");
+          }
+        });
+      }
     });
   }
 
