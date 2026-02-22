@@ -7,3 +7,17 @@ window.APP_CONFIG = {
   adminCode: "Ciaocia0!",             // <-- cambia qui
   storageKey: "33giri_catalog_v1"
 };
+
+// --- lock APP_CONFIG (stop override) ---
+window.APP_CONFIG.__build = "lock-2026-02-22-1";
+console.log("CONFIG LOADED", window.APP_CONFIG.__build, window.APP_CONFIG.whatsappNumber);
+
+try {
+  // impedisce: window.APP_CONFIG = {...} in altri script
+  Object.defineProperty(window, "APP_CONFIG", {
+    value: window.APP_CONFIG,
+    writable: false,
+    configurable: false
+  });
+  Object.freeze(window.APP_CONFIG);
+} catch (e) {}
