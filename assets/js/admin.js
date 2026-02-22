@@ -32,13 +32,20 @@ function basePath() {
   return location.pathname.includes("/33giri/") ? "/33giri/" : "/";
 }
 
-/* ✅ FIXED: correct redirect to project index */
 function requireAdmin() {
-  const ok = sessionStorage.getItem(LS_ADMIN_SESSION) === "1";
-  if (!ok) {
-    // torna a index (corretto su GitHub Pages e in locale)
-    window.location.href = basePath() + "index.html";
+  const okSession = sessionStorage.getItem(LS_ADMIN_SESSION) === "1";
+  const okLocal = localStorage.getItem(LS_ADMIN_SESSION) === "1";
+
+  if (okSession) return;
+
+  // ✅ fallback persistente: ricrea la sessione
+  if (okLocal) {
+    sessionStorage.setItem(LS_ADMIN_SESSION, "1");
+    return;
   }
+
+  window.location.href = basePath() + "index.html";
+}
 }
 
 // convert image file -> dataURL
