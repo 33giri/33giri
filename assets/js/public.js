@@ -11,7 +11,7 @@
 
   const fModel = el("fModel");
   const fCollection = el("fCollection");
-  const fPlace = el("fPlace"); // ✅ NUOVO
+  const fPlace = el("fPlace"); // ✅ filtro città
   const fGenre = el("fGenre");
   const fYear = el("fYear");
 
@@ -37,8 +37,7 @@
   if (heroTitle) heroTitle.textContent = cfg.heroTitle || "Arte in Vinile";
   if (heroSubtitle)
     heroSubtitle.textContent =
-      cfg.heroSubtitle ||
-      "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
+      cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
 
   toggleFilters?.addEventListener("click", () => {
     advanced?.classList.toggle("open");
@@ -60,8 +59,13 @@
   }
 
   function normPlace(x) {
-    // normalizza per confronto: "Bologna" == "bologna"
     return String(x ?? "").trim().toLowerCase();
+  }
+
+  function prettyPlace(place) {
+    const s = String(place || "").trim();
+    if (!s) return "";
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   }
 
   // --- CACHE prodotti ---
@@ -99,7 +103,7 @@
       `Ciao! Sono interessato a: ${p.title || "-"} — ${p.artist || "-"}.\n` +
       `Genere: ${p.genre || "-"} | Anno: ${p.year || "-"}\n` +
       `Modello: ${p.model || "-"} | Collezione: ${p.collection || "-"}\n` +
-      `Città: ${p.place || "-"}\n`;
+      `Città: ${prettyPlace(p.place) || "-"}\n`;
     return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
   }
 
@@ -175,13 +179,13 @@
   function populateFilters(products) {
     const models = uniq(products.map((p) => p.model));
     const cols = uniq(products.map((p) => p.collection));
-    const places = uniq(products.map((p) => p.place)); // ✅ NUOVO
+    const places = uniq(products.map((p) => p.place));
     const genres = uniq(products.map((p) => p.genre));
     const years = uniq(products.map((p) => p.year)).sort((a, b) => Number(a) - Number(b));
 
     fillSelectPreserve(fModel, models, "Modello");
     fillSelectPreserve(fCollection, cols, "Collezione");
-    fillSelectPreserve(fPlace, places, "Città"); // ✅ NUOVO
+    fillSelectPreserve(fPlace, places, "Città");
     fillSelectPreserve(fGenre, genres, "Genere");
     fillSelectPreserve(fYear, years, "Anno");
   }
@@ -193,7 +197,7 @@
     const genreParam = sp.get("genre");
     const modelParam = sp.get("model");
     const collectionParam = sp.get("collection");
-    const placeParam = sp.get("place"); // ✅ NUOVO
+    const placeParam = sp.get("place");
     const yearParam = sp.get("year");
 
     const hasAny = qParam || genreParam || modelParam || collectionParam || placeParam || yearParam;
@@ -204,7 +208,7 @@
     if (genreParam && fGenre) fGenre.value = genreParam;
     if (modelParam && fModel) fModel.value = modelParam;
     if (collectionParam && fCollection) fCollection.value = collectionParam;
-    if (placeParam && fPlace) fPlace.value = placeParam; // ✅ NUOVO
+    if (placeParam && fPlace) fPlace.value = placeParam;
     if (yearParam && fYear) fYear.value = yearParam;
   }
 
@@ -219,17 +223,11 @@
 
     if (fModel?.value && p.model !== fModel.value) return false;
     if (fCollection?.value && p.collection !== fCollection.value) return false;
-    if (fPlace?.value && normPlace(p.place) !== normPlace(fPlace.value)) return false; // ✅ NUOVO
+    if (fPlace?.value && normPlace(p.place) !== normPlace(fPlace.value)) return false;
     if (fGenre?.value && p.genre !== fGenre.value) return false;
     if (fYear?.value && String(p.year) !== String(fYear.value)) return false;
 
     return true;
-  }
-
-  function prettyPlace(place) {
-    const s = String(place || "").trim();
-    if (!s) return "";
-    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   }
 
   function renderFromCache() {
@@ -239,8 +237,10 @@
     if (!grid) return;
 
     grid.innerHTML = filtered
-      .map(
-        (p) => `
+      .map((p) => {
+        const placeNice = prettyPlace(p.place);
+
+        return `
         <div class="card" data-id="${escapeHtml(p.id)}" role="button" tabindex="0">
           <div class="card-img">
             <img src="${escapeHtml(p.image1 || "")}" alt="">
@@ -253,11 +253,7 @@
 
             <div class="chips">
               <span class="chip">${escapeHtml(p.model || "")}</span>
-              ${
-                p.collection
-                  ? `<span class="chip blue">${escapeHtml(p.collection || "")}</span>`
-                  : ""
-              }
+              ${p.collection ? `<span class="chip blue">${escapeHtml(p.collection || "")}</span>` : ""}
             </div>
 
             <div class="card-meta">
@@ -266,14 +262,14 @@
             </div>
 
             ${
-              p.place
-                ? `<div class="place-line">Disponibile a ${escapeHtml(prettyPlace(p.place))}</div>`
+              placeNice
+                ? `<div class="card-place">Disponibile a <span>${escapeHtml(placeNice)}</span></div>`
                 : ""
             }
           </div>
         </div>
-      `
-      )
+      `;
+      })
       .join("");
   }
 
@@ -307,6 +303,26 @@
     }
 
     PRODUCTS = await Store.getProducts();
+
+    // ✅ Default: Trento prima (poi Bologna, poi il resto)
+    const placeRank = (p) => {
+      const v = normPlace(p.place);
+      if (v === "trento") return 0;
+      if (v === "bologna") return 1;
+      return 2;
+    };
+
+    PRODUCTS.sort((a, b) => {
+      const ra = placeRank(a);
+      const rb = placeRank(b);
+      if (ra !== rb) return ra - rb;
+
+      // a parità: più recenti prima se created_at esiste
+      const ta = a.created_at ? Date.parse(a.created_at) : 0;
+      const tb = b.created_at ? Date.parse(b.created_at) : 0;
+      return tb - ta;
+    });
+
     populateFilters(PRODUCTS);
 
     if (!FILTERS_READY) {
