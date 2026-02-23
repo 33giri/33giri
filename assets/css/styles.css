@@ -1099,3 +1099,36 @@ body.admin{
     max-height: calc(100vh - 44px - 320px);
   }
 }
+
+/* ✅ Badge overlay "scopri dettagli" */
+.card-img{
+  position: relative; /* già c’è, ma lo ribadisco */
+}
+
+.hint-badge{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  text-transform: lowercase;
+
+  color: rgba(255,255,255,.95);
+  background: rgba(15,23,42,.55);
+  border: 1px solid rgba(255,255,255,.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  pointer-events: none; /* così non blocca il click sulla card */
+}
+
+.card:hover .hint-badge{
+  background: rgba(15,23,42,.68);
+  border-color: rgba(255,255,255,.28);
+}
