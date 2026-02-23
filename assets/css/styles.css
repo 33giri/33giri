@@ -1077,3 +1077,25 @@ body.admin{
 .card .mini-wa .wa-ico::after{
   font-size: 13px !important;
 }
+/* ✅ Mobile: abilita scroll dentro il modal */
+@media (max-width: 860px){
+  .modal{
+    max-height: calc(100vh - 44px);
+    overflow: hidden; /* il contenuto scrolla dentro, non fuori */
+  }
+
+  .modal-grid{
+    grid-template-columns: 1fr;
+    grid-template-rows: 320px 1fr; /* immagine sopra + contenuto sotto */
+  }
+
+  .modal-img{
+    min-height: 320px;
+  }
+
+  .modal-content{
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* scroll fluido iOS */
+    max-height: calc(100vh - 44px - 320px);
+  }
+}
