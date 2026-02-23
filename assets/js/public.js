@@ -232,6 +232,7 @@
         <div class="card" data-id="${escapeHtml(p.id)}" role="button" tabindex="0">
           <div class="card-img">
             <img src="${escapeHtml(p.image1 || "")}" alt="">
+            <span class="hint-badge">scopri dettagli</span>
           </div>
 
           <div class="card-body">
