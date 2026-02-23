@@ -1145,3 +1145,21 @@ body.admin{
   color: var(--teal-700);
   font-weight: 950;
 }
+
+/* ✅ Place in card: stesso stile del meta (coerente con UI) */
+.card-place,
+.place-line{
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 750;
+  color: rgba(15,23,42,.55);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.card-place span,
+.place-line span{
+  color: var(--teal-700);
+  font-weight: 900;
+}
