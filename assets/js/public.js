@@ -15,9 +15,13 @@
   const fYear = el("fYear");
 
   // hero texts
-  el("heroTitle").textContent = cfg.heroTitle || "Arte in Vinile";
-  el("heroSubtitle").textContent =
-    cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
+  const heroTitle = el("heroTitle");
+  const heroSubtitle = el("heroSubtitle");
+  if (heroTitle) heroTitle.textContent = cfg.heroTitle || "Arte in Vinile";
+  if (heroSubtitle) {
+    heroSubtitle.textContent =
+      cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
+  }
 
   toggleFilters?.addEventListener("click", () => {
     advanced?.classList.toggle("open");
@@ -38,28 +42,25 @@
       .replaceAll("'", "&#039;");
   }
 
-  // --- CACHE prodotti (così non rifetchi e non resetti i filtri) ---
+  // --- CACHE prodotti ---
   let PRODUCTS = [];
   let FILTERS_READY = false;
 
   function fillSelectPreserve(select, items, firstLabel) {
     if (!select) return;
 
-    // salva selezione attuale
     const prev = select.value;
-
     const esc = (s) => String(s).replaceAll('"', "&quot;");
+
     select.innerHTML =
       `<option value="">${firstLabel}</option>` +
       items.map((x) => `<option value="${esc(x)}">${x}</option>`).join("");
 
-    // ripristina se esiste ancora tra le opzioni
     const stillExists = Array.from(select.options).some((o) => o.value === prev);
     select.value = stillExists ? prev : "";
   }
 
-  function populateFiltersOnce(products) {
-    // popola una sola volta (ma preserva comunque per sicurezza)
+  function populateFilters(products) {
     const models = uniq(products.map((p) => p.model));
     const cols = uniq(products.map((p) => p.collection));
     const genres = uniq(products.map((p) => p.genre));
@@ -72,28 +73,27 @@
   }
 
   function matches(p) {
-    // pubblico: mostra solo disponibili
+    // pubblico: solo disponibili
     if (p.soldAt) return false;
 
-    const qs = q.value.trim().toLowerCase();
+    const qs = (q?.value || "").trim().toLowerCase();
     if (qs) {
       const hay = `${p.title || ""} ${p.artist || ""}`.toLowerCase();
       if (!hay.includes(qs)) return false;
     }
 
-    if (fModel.value && p.model !== fModel.value) return false;
-    if (fCollection.value && p.collection !== fCollection.value) return false;
-    if (fGenre.value && p.genre !== fGenre.value) return false;
-    if (fYear.value && String(p.year) !== String(fYear.value)) return false;
+    if (fModel?.value && p.model !== fModel.value) return false;
+    if (fCollection?.value && p.collection !== fCollection.value) return false;
+    if (fGenre?.value && p.genre !== fGenre.value) return false;
+    if (fYear?.value && String(p.year) !== String(fYear.value)) return false;
 
     return true;
   }
 
   function renderFromCache() {
-    // se non ho ancora prodotti, non faccio nulla
+    if (!grid || !count) return;
     if (!Array.isArray(PRODUCTS)) PRODUCTS = [];
 
-    // filtri
     const filtered = PRODUCTS.filter(matches);
     count.textContent = String(filtered.length);
 
@@ -126,28 +126,24 @@
   }
 
   async function init() {
-    // aspetta che Store sia disponibile (dato che usi type="module")
     if (!window.Store?.getProducts) {
-      // retry breve
       setTimeout(init, 120);
       return;
     }
 
-    PRODUCTS = await Store.getProducts();
+    PRODUCTS = await window.Store.getProducts();
 
     if (!FILTERS_READY) {
-      populateFiltersOnce(PRODUCTS);
+      populateFilters(PRODUCTS);
       FILTERS_READY = true;
     } else {
-      // se mai ricarichi PRODUCTS in futuro, preserva selezioni
-      populateFiltersOnce(PRODUCTS);
+      populateFilters(PRODUCTS);
     }
 
     renderFromCache();
   }
 
-  // listeners: NON chiamano init(), chiamano solo renderFromCache()
-  // così non rifetchi e non resetti i select
+  // listeners: NON rifanno fetch
   [q, fModel, fCollection, fGenre, fYear].forEach((x) => {
     if (!x) return;
     x.addEventListener("input", renderFromCache);
