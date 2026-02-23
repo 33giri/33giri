@@ -4,6 +4,47 @@
    Target: match screenshots (public + modals + admin)
 ========================================================= */
 
+/* =========================================================
+   FONTS — Kazer Studio Fluro (local)
+   Metti i file in: assets/fonts/
+========================================================= */
+@font-face{
+  font-family: "Fluro";
+  src: url("../fonts/kazer-studio-fluro-light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face{
+  font-family: "Fluro";
+  src: url("../fonts/kazer-studio-fluro.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face{
+  font-family: "Fluro";
+  src: url("../fonts/kazer-studio-fluro-semibold.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face{
+  font-family: "Fluro";
+  src: url("../fonts/kazer-studio-fluro-bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+/* opzionale: outline come famiglia separata */
+@font-face{
+  font-family: "Fluro Outline";
+  src: url("../fonts/kazer-studio-fluro-bold-outline.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root{
   /* Public */
   --public-bg: #f6f7fb;
@@ -62,6 +103,9 @@
   --radius-22:22px;
 
   --font: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+  /* ✅ display font (Fluro) */
+  --font-display: "Fluro", var(--font);
 }
 
 /* Reset */
@@ -124,7 +168,13 @@ body.public{
   height: 300px;
   display:flex;
   align-items:center;
-  justify-content:center;
+
+  /* ✅ prima era center: ora a sinistra */
+  justify-content:flex-start;
+  text-align:left;
+  padding-left: 22px;
+  padding-right: 22px;
+
   color:#fff;
   border-bottom: 1px solid rgba(15,23,42,.12);
   background:
@@ -132,17 +182,38 @@ body.public{
     radial-gradient(1200px 520px at 50% 60%, rgba(0,0,0,.18), rgba(0,0,0,0) 55%),
     linear-gradient(180deg, #163f4e 0%, #0f3240 55%, #0b2c37 100%);
 }
+
+/* ✅ 33Catalogo */
 .hero h1{
   margin:0;
   font-size: 66px;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -1px;
   text-shadow: 0 10px 22px rgba(0,0,0,.18);
+
+  /* ✅ Fluro */
+  font-family: var(--font-display);
 }
+
+/* ✅ titolo "Arte in vinile" se è un h2 nell'hero */
+.hero h2{
+  margin: 10px 0 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  opacity: .92;
+  font-family: var(--font-display);
+}
+
+/* ✅ testo sotto */
 .hero p{
   margin: 12px 0 0;
   font-size: 18px;
   opacity:.85;
+
+  /* ✅ Fluro anche qui */
+  font-family: var(--font-display);
+  font-weight: 300;
 }
 
 /* Filters area */
@@ -251,7 +322,8 @@ body.public{
   cursor:pointer;
   transition: transform .12s ease, box-shadow .12s ease;
 }
-}
+
+/* ✅ tolto il } extra che rompeva il CSS */
 .card:hover{
   transform: translateY(-2px);
   box-shadow: 0 16px 34px rgba(15,23,42,.10);
