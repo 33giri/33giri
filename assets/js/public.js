@@ -14,14 +14,29 @@
   const fGenre = el("fGenre");
   const fYear = el("fYear");
 
+  // Modal elems (già presenti in index.html)
+  const productModal = el("productModal");
+  const closeProduct = el("closeProduct");
+  const mImg = el("mImg");
+  const imgPrev = el("imgPrev");
+  const imgNext = el("imgNext");
+
+  const mTitle = el("mTitle");
+  const mArtist = el("mArtist");
+  const mGenre = el("mGenre");
+  const mYear = el("mYear");
+  const mExtra = el("mExtra");
+  const mDot = el("mDot");
+  const mStatusText = el("mStatusText");
+  const whBtn = el("whBtn");
+
   // hero texts
   const heroTitle = el("heroTitle");
   const heroSubtitle = el("heroSubtitle");
   if (heroTitle) heroTitle.textContent = cfg.heroTitle || "Arte in Vinile";
-  if (heroSubtitle) {
+  if (heroSubtitle)
     heroSubtitle.textContent =
       cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
-  }
 
   toggleFilters?.addEventListener("click", () => {
     advanced?.classList.toggle("open");
@@ -34,7 +49,7 @@
   }
 
   function escapeHtml(str) {
-    return String(str)
+    return String(str ?? "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
@@ -46,6 +61,101 @@
   let PRODUCTS = [];
   let FILTERS_READY = false;
 
+  // --- Modal state ---
+  let CURRENT = null;
+  let IMGS = [];
+  let IDX = 0;
+
+  function lockBody(lock) {
+    // evita scroll dietro (mobile)
+    if (lock) {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    } else {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    }
+  }
+
+  function setModalImage(i) {
+    if (!IMGS.length) return;
+    IDX = (i + IMGS.length) % IMGS.length;
+    if (mImg) mImg.src = IMGS[IDX];
+    if (imgPrev) imgPrev.style.display = IMGS.length > 1 ? "" : "none";
+    if (imgNext) imgNext.style.display = IMGS.length > 1 ? "" : "none";
+  }
+
+  function waLinkFor(p) {
+    const num = String(cfg.whatsappNumber || "").replaceAll(" ", "");
+    const msg =
+      `Ciao! Sono interessato a: ${p.title || "-"} — ${p.artist || "-"}.\n` +
+      `Genere: ${p.genre || "-"} | Anno: ${p.year || "-"}\n` +
+      `Modello: ${p.model || "-"} | Collezione: ${p.collection || "-"}\n`;
+    return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+  }
+
+  function openProductById(id) {
+    const p = PRODUCTS.find((x) => String(x.id) === String(id));
+    if (!p || !productModal) return;
+
+    CURRENT = p;
+
+    // immagini
+    IMGS = [p.image1, p.image2].filter((x) => !!x);
+    if (!IMGS.length) IMGS = [""]; // evita crash
+    setModalImage(0);
+
+    if (mTitle) mTitle.textContent = p.title || "";
+    if (mArtist) mArtist.textContent = p.artist || "";
+    if (mGenre) mGenre.textContent = p.genre || "";
+    if (mYear) mYear.textContent = p.year ? String(p.year) : "";
+    if (mExtra) mExtra.textContent = p.extra || p.note || p.description || "";
+
+    const sold = !!p.soldAt;
+    if (mDot) mDot.classList.toggle("sold", sold);
+    if (mStatusText)
+      mStatusText.textContent = sold ? "Venduto" : "Disponibile - Pezzo Unico";
+
+    if (whBtn) {
+      whBtn.onclick = () => window.open(waLinkFor(p), "_blank", "noopener");
+    }
+
+    productModal.classList.add("open");
+    lockBody(true);
+  }
+
+  function closeProductModal() {
+    if (!productModal) return;
+    productModal.classList.remove("open");
+    lockBody(false);
+  }
+
+  closeProduct?.addEventListener("click", closeProductModal);
+
+  // chiudi cliccando sul backdrop (non sul box)
+  productModal?.addEventListener("click", (e) => {
+    if (e.target === productModal) closeProductModal();
+  });
+
+  // ESC chiude
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && productModal?.classList.contains("open")) {
+      closeProductModal();
+    }
+  });
+
+  imgPrev?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setModalImage(IDX - 1);
+  });
+  imgNext?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setModalImage(IDX + 1);
+  });
+
+  // ---- Filtri ----
   function fillSelectPreserve(select, items, firstLabel) {
     if (!select) return;
 
@@ -72,8 +182,28 @@
     fillSelectPreserve(fYear, years, "Anno");
   }
 
+  function applyUrlParamsOnce() {
+    const sp = new URLSearchParams(location.search);
+
+    const qParam = sp.get("q");
+    const genreParam = sp.get("genre");
+    const modelParam = sp.get("model");
+    const collectionParam = sp.get("collection");
+    const yearParam = sp.get("year");
+
+    const hasAny = qParam || genreParam || modelParam || collectionParam || yearParam;
+    if (hasAny) advanced?.classList.add("open");
+
+    if (qParam && q) q.value = qParam;
+
+    if (genreParam && fGenre) fGenre.value = genreParam;
+    if (modelParam && fModel) fModel.value = modelParam;
+    if (collectionParam && fCollection) fCollection.value = collectionParam;
+    if (yearParam && fYear) fYear.value = yearParam;
+  }
+
   function matches(p) {
-    // pubblico: solo disponibili
+    // pubblico: mostra solo disponibili
     if (p.soldAt) return false;
 
     const qs = (q?.value || "").trim().toLowerCase();
@@ -91,18 +221,17 @@
   }
 
   function renderFromCache() {
-    if (!grid || !count) return;
-    if (!Array.isArray(PRODUCTS)) PRODUCTS = [];
+    const filtered = (PRODUCTS || []).filter(matches);
+    if (count) count.textContent = String(filtered.length);
 
-    const filtered = PRODUCTS.filter(matches);
-    count.textContent = String(filtered.length);
+    if (!grid) return;
 
     grid.innerHTML = filtered
       .map(
         (p) => `
-        <div class="card" data-id="${p.id}">
+        <div class="card" data-id="${escapeHtml(p.id)}" role="button" tabindex="0">
           <div class="card-img">
-            <img src="${p.image1 || ""}" alt="">
+            <img src="${escapeHtml(p.image1 || "")}" alt="">
           </div>
 
           <div class="card-body">
@@ -125,30 +254,47 @@
       .join("");
   }
 
+  // ✅ EVENT DELEGATION: funziona anche dopo ogni render (non si “perde”)
+  grid?.addEventListener("click", (e) => {
+    const card = e.target.closest(".card");
+    if (!card) return;
+    const id = card.getAttribute("data-id");
+    if (id) openProductById(id);
+  });
+
+  // Enter su card (accessibilità)
+  grid?.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    const card = e.target.closest(".card");
+    if (!card) return;
+    const id = card.getAttribute("data-id");
+    if (id) openProductById(id);
+  });
+
+  // listeners filtri
+  [q, fModel, fCollection, fGenre, fYear].forEach((x) => {
+    if (!x) return;
+    x.addEventListener("input", renderFromCache);
+    x.addEventListener("change", renderFromCache);
+  });
+
   async function init() {
     if (!window.Store?.getProducts) {
       setTimeout(init, 120);
       return;
     }
 
-    PRODUCTS = await window.Store.getProducts();
+    PRODUCTS = await Store.getProducts();
+
+    populateFilters(PRODUCTS);
 
     if (!FILTERS_READY) {
-      populateFilters(PRODUCTS);
+      applyUrlParamsOnce();
       FILTERS_READY = true;
-    } else {
-      populateFilters(PRODUCTS);
     }
 
     renderFromCache();
   }
-
-  // listeners: NON rifanno fetch
-  [q, fModel, fCollection, fGenre, fYear].forEach((x) => {
-    if (!x) return;
-    x.addEventListener("input", renderFromCache);
-    x.addEventListener("change", renderFromCache);
-  });
 
   init();
 })();
