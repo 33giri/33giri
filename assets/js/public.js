@@ -11,6 +11,7 @@
 
   const fModel = el("fModel");
   const fCollection = el("fCollection");
+  const fPlace = el("fPlace"); // ✅ NUOVO
   const fGenre = el("fGenre");
   const fYear = el("fYear");
 
@@ -36,7 +37,8 @@
   if (heroTitle) heroTitle.textContent = cfg.heroTitle || "Arte in Vinile";
   if (heroSubtitle)
     heroSubtitle.textContent =
-      cfg.heroSubtitle || "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
+      cfg.heroSubtitle ||
+      "Vinili trasformati in pezzi unici. Ogni pezzo racconta una storia musicale.";
 
   toggleFilters?.addEventListener("click", () => {
     advanced?.classList.toggle("open");
@@ -57,11 +59,9 @@
       .replaceAll("'", "&#039;");
   }
 
-  // ✅ "trento" -> "Trento"
-  function prettyPlace(place) {
-    const s = String(place ?? "").trim();
-    if (!s) return "";
-    return s.charAt(0).toUpperCase() + s.slice(1);
+  function normPlace(x) {
+    // normalizza per confronto: "Bologna" == "bologna"
+    return String(x ?? "").trim().toLowerCase();
   }
 
   // --- CACHE prodotti ---
@@ -74,7 +74,6 @@
   let IDX = 0;
 
   function lockBody(lock) {
-    // evita scroll dietro (mobile)
     if (lock) {
       document.documentElement.style.overflow = "hidden";
       document.body.style.overflow = "hidden";
@@ -96,14 +95,11 @@
 
   function waLinkFor(p) {
     const num = String(cfg.whatsappNumber || "").replaceAll(" ", "");
-    const placeTxt = p.place ? `Luogo: ${prettyPlace(p.place)}\n` : "";
-
     const msg =
       `Ciao! Sono interessato a: ${p.title || "-"} — ${p.artist || "-"}.\n` +
       `Genere: ${p.genre || "-"} | Anno: ${p.year || "-"}\n` +
       `Modello: ${p.model || "-"} | Collezione: ${p.collection || "-"}\n` +
-      placeTxt;
-
+      `Città: ${p.place || "-"}\n`;
     return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
   }
 
@@ -113,9 +109,8 @@
 
     CURRENT = p;
 
-    // immagini
     IMGS = [p.image1, p.image2].filter((x) => !!x);
-    if (!IMGS.length) IMGS = [""]; // evita crash
+    if (!IMGS.length) IMGS = [""];
     setModalImage(0);
 
     if (mTitle) mTitle.textContent = p.title || "";
@@ -129,9 +124,7 @@
     if (mStatusText)
       mStatusText.textContent = sold ? "Venduto" : "Disponibile - Pezzo Unico";
 
-    if (whBtn) {
-      whBtn.onclick = () => window.open(waLinkFor(p), "_blank", "noopener");
-    }
+    if (whBtn) whBtn.onclick = () => window.open(waLinkFor(p), "_blank", "noopener");
 
     productModal.classList.add("open");
     lockBody(true);
@@ -145,12 +138,10 @@
 
   closeProduct?.addEventListener("click", closeProductModal);
 
-  // chiudi cliccando sul backdrop (non sul box)
   productModal?.addEventListener("click", (e) => {
     if (e.target === productModal) closeProductModal();
   });
 
-  // ESC chiude
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && productModal?.classList.contains("open")) {
       closeProductModal();
@@ -184,11 +175,13 @@
   function populateFilters(products) {
     const models = uniq(products.map((p) => p.model));
     const cols = uniq(products.map((p) => p.collection));
+    const places = uniq(products.map((p) => p.place)); // ✅ NUOVO
     const genres = uniq(products.map((p) => p.genre));
     const years = uniq(products.map((p) => p.year)).sort((a, b) => Number(a) - Number(b));
 
     fillSelectPreserve(fModel, models, "Modello");
     fillSelectPreserve(fCollection, cols, "Collezione");
+    fillSelectPreserve(fPlace, places, "Città"); // ✅ NUOVO
     fillSelectPreserve(fGenre, genres, "Genere");
     fillSelectPreserve(fYear, years, "Anno");
   }
@@ -200,9 +193,10 @@
     const genreParam = sp.get("genre");
     const modelParam = sp.get("model");
     const collectionParam = sp.get("collection");
+    const placeParam = sp.get("place"); // ✅ NUOVO
     const yearParam = sp.get("year");
 
-    const hasAny = qParam || genreParam || modelParam || collectionParam || yearParam;
+    const hasAny = qParam || genreParam || modelParam || collectionParam || placeParam || yearParam;
     if (hasAny) advanced?.classList.add("open");
 
     if (qParam && q) q.value = qParam;
@@ -210,11 +204,11 @@
     if (genreParam && fGenre) fGenre.value = genreParam;
     if (modelParam && fModel) fModel.value = modelParam;
     if (collectionParam && fCollection) fCollection.value = collectionParam;
+    if (placeParam && fPlace) fPlace.value = placeParam; // ✅ NUOVO
     if (yearParam && fYear) fYear.value = yearParam;
   }
 
   function matches(p) {
-    // pubblico: mostra solo disponibili
     if (p.soldAt) return false;
 
     const qs = (q?.value || "").trim().toLowerCase();
@@ -225,10 +219,17 @@
 
     if (fModel?.value && p.model !== fModel.value) return false;
     if (fCollection?.value && p.collection !== fCollection.value) return false;
+    if (fPlace?.value && normPlace(p.place) !== normPlace(fPlace.value)) return false; // ✅ NUOVO
     if (fGenre?.value && p.genre !== fGenre.value) return false;
     if (fYear?.value && String(p.year) !== String(fYear.value)) return false;
 
     return true;
+  }
+
+  function prettyPlace(place) {
+    const s = String(place || "").trim();
+    if (!s) return "";
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   }
 
   function renderFromCache() {
@@ -238,10 +239,8 @@
     if (!grid) return;
 
     grid.innerHTML = filtered
-      .map((p) => {
-        const placeNice = prettyPlace(p.place);
-
-        return `
+      .map(
+        (p) => `
         <div class="card" data-id="${escapeHtml(p.id)}" role="button" tabindex="0">
           <div class="card-img">
             <img src="${escapeHtml(p.image1 || "")}" alt="">
@@ -254,7 +253,11 @@
 
             <div class="chips">
               <span class="chip">${escapeHtml(p.model || "")}</span>
-              ${p.collection ? `<span class="chip blue">${escapeHtml(p.collection || "")}</span>` : ""}
+              ${
+                p.collection
+                  ? `<span class="chip blue">${escapeHtml(p.collection || "")}</span>`
+                  : ""
+              }
             </div>
 
             <div class="card-meta">
@@ -263,18 +266,18 @@
             </div>
 
             ${
-              placeNice
-                ? `<div class="card-place">Disponibile a <span>${escapeHtml(placeNice)}</span></div>`
+              p.place
+                ? `<div class="place-line">Disponibile a ${escapeHtml(prettyPlace(p.place))}</div>`
                 : ""
             }
           </div>
         </div>
-      `;
-      })
+      `
+      )
       .join("");
   }
 
-  // ✅ EVENT DELEGATION: funziona anche dopo ogni render (non si “perde”)
+  // Event delegation
   grid?.addEventListener("click", (e) => {
     const card = e.target.closest(".card");
     if (!card) return;
@@ -282,7 +285,6 @@
     if (id) openProductById(id);
   });
 
-  // Enter su card (accessibilità)
   grid?.addEventListener("keydown", (e) => {
     if (e.key !== "Enter") return;
     const card = e.target.closest(".card");
@@ -292,7 +294,7 @@
   });
 
   // listeners filtri
-  [q, fModel, fCollection, fGenre, fYear].forEach((x) => {
+  [q, fModel, fCollection, fPlace, fGenre, fYear].forEach((x) => {
     if (!x) return;
     x.addEventListener("input", renderFromCache);
     x.addEventListener("change", renderFromCache);
@@ -305,7 +307,6 @@
     }
 
     PRODUCTS = await Store.getProducts();
-
     populateFilters(PRODUCTS);
 
     if (!FILTERS_READY) {
