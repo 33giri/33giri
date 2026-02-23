@@ -11,8 +11,8 @@
 
   <!-- cache bust -->
   <link rel="stylesheet" href="/33giri/assets/css/styles.css?v=7" />
-</head> 
- 
+</head>
+
 <body class="public">
   <header class="topbar">
     <div class="container topbar-inner">
@@ -24,12 +24,7 @@
         <span>33Giri Catalogo</span>
       </div>
 
-      <button class="icon-btn" id="openAdmin" title="Admin">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M7 10V8a5 5 0 0 1 10 0v2" stroke="#0f4a5e" stroke-width="2" stroke-linecap="round"/>
-          <path d="M6 10h12v10H6V10Z" stroke="#0f4a5e" stroke-width="2" stroke-linejoin="round"/>
-        </svg>
-      </button>
+      <!-- ✅ ADMIN RIMOSSO -->
     </div>
   </header>
 
@@ -125,19 +120,6 @@
             <span class="tip" role="tooltip">Modello standard, personalizzabile su richiesta</span>
           </button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ADMIN LOGIN MODAL -->
-  <div class="modal-backdrop" id="adminModal">
-    <div class="modal small">
-      <button class="modal-close" id="closeAdmin">✕</button>
-      <div class="modal-content" style="padding:24px;">
-        <h2 style="font-size:18px;letter-spacing:0;margin:0 0 14px;color:#0e1626;">Accesso Admin</h2>
-        <input id="adminCode" class="search" style="height:46px;" placeholder="Inserisci il codice" />
-        <button class="primary-btn" id="adminEnter" style="margin-top:14px;width:100%;">Accedi</button>
-        <div class="modal-note" id="adminErr" style="color:rgba(14,22,38,.6)"></div>
       </div>
     </div>
   </div>
