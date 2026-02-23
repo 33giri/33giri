@@ -1133,3 +1133,15 @@ body.admin{
   border-color: rgba(255,255,255,.28);
 }
 .brand { font-family: var(--font-display); }
+
+.card-place{
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(15,23,42,.70);
+}
+
+.card-place span{
+  color: var(--teal-700);
+  font-weight: 950;
+}
