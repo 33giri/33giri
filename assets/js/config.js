@@ -6,10 +6,7 @@ window.APP_CONFIG = {
 
   whatsappNumber: "+393471692948",
 
-  // se poi elimini la vecchia admin locale, puoi anche rimuoverlo
-  adminCode: "Ciaocia0!",
-  storageKey: "33giri_catalog_v1",
-
+  
   // ✅ Supabase
   supabaseUrl: "https://oovqibecarfdoybzbqwt.supabase.co",
   supabaseAnonKey: "sb_publishable_pOzkEqcT6oMW4pLKv_sWZw_WyCkFC6a",
