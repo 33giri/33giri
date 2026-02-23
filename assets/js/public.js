@@ -57,6 +57,13 @@
       .replaceAll("'", "&#039;");
   }
 
+  // ✅ "trento" -> "Trento"
+  function prettyPlace(place) {
+    const s = String(place ?? "").trim();
+    if (!s) return "";
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
   // --- CACHE prodotti ---
   let PRODUCTS = [];
   let FILTERS_READY = false;
@@ -89,10 +96,14 @@
 
   function waLinkFor(p) {
     const num = String(cfg.whatsappNumber || "").replaceAll(" ", "");
+    const placeTxt = p.place ? `Luogo: ${prettyPlace(p.place)}\n` : "";
+
     const msg =
       `Ciao! Sono interessato a: ${p.title || "-"} — ${p.artist || "-"}.\n` +
       `Genere: ${p.genre || "-"} | Anno: ${p.year || "-"}\n` +
-      `Modello: ${p.model || "-"} | Collezione: ${p.collection || "-"}\n`;
+      `Modello: ${p.model || "-"} | Collezione: ${p.collection || "-"}\n` +
+      placeTxt;
+
     return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
   }
 
@@ -227,8 +238,10 @@
     if (!grid) return;
 
     grid.innerHTML = filtered
-      .map(
-        (p) => `
+      .map((p) => {
+        const placeNice = prettyPlace(p.place);
+
+        return `
         <div class="card" data-id="${escapeHtml(p.id)}" role="button" tabindex="0">
           <div class="card-img">
             <img src="${escapeHtml(p.image1 || "")}" alt="">
@@ -248,10 +261,16 @@
               <span>${escapeHtml(p.genre || "")}</span>
               <span>${escapeHtml(String(p.year || ""))}</span>
             </div>
+
+            ${
+              placeNice
+                ? `<div class="card-place">Disponibile a <span>${escapeHtml(placeNice)}</span></div>`
+                : ""
+            }
           </div>
         </div>
-      `
-      )
+      `;
+      })
       .join("");
   }
 
