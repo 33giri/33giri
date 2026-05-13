@@ -43,7 +43,18 @@
     advanced?.classList.toggle("open");
   });
 
-  // ✅ FIX: deduplicazione case-insensitive.
+  // ✅ Correzione typo nei modelli (gestisce anche cache con vecchi valori sbagliati)
+  const MODEL_TYPOS = {
+    "posacenre": "posacenere",
+    "spalsh":    "splash",
+  };
+
+  function fixModel(v) {
+    const key = String(v ?? "").trim().toLowerCase();
+    return MODEL_TYPOS[key] ?? v;
+  }
+
+  // ✅ Deduplicazione case-insensitive.
   // Se lowerCase=true il valore canonico è tutto minuscolo (usato per i modelli).
   // Altrimenti prima lettera maiuscola (usato per gli altri filtri).
   function uniq(list, lowerCase = false) {
@@ -190,8 +201,8 @@
   }
 
   function populateFilters(products) {
-    // ✅ modelli: tutto minuscolo e deduplicati case-insensitive
-    const models = uniq(products.map((p) => p.model), true);
+    // ✅ modelli: corregge typo, tutto minuscolo, deduplicati case-insensitive
+    const models = uniq(products.map((p) => fixModel(p.model)), true);
     const cols   = uniq(products.map((p) => p.collection));
     const places = uniq(products.map((p) => p.place));
     const genres = uniq(products.map((p) => p.genre));
@@ -217,7 +228,7 @@
     const hasAny = qParam || genreParam || modelParam || collectionParam || placeParam || yearParam;
     if (hasAny) advanced?.classList.add("open");
 
-    if (qParam && q)                    q.value          = qParam;
+    if (qParam && q)                    q.value           = qParam;
     if (genreParam && fGenre)           fGenre.value      = genreParam;
     if (modelParam && fModel)           fModel.value      = modelParam;
     if (collectionParam && fCollection) fCollection.value = collectionParam;
@@ -225,7 +236,7 @@
     if (yearParam && fYear)             fYear.value       = yearParam;
   }
 
-  // ✅ FIX: confronto case-insensitive per model, collection e genre
+  // ✅ Confronto case-insensitive per model, collection e genre + correzione typo
   function matches(p) {
     if (p.soldAt) return false;
 
@@ -237,11 +248,11 @@
 
     const ci = (s) => String(s ?? "").trim().toLowerCase();
 
-    if (fModel?.value      && ci(p.model)      !== ci(fModel.value))      return false;
-    if (fCollection?.value && ci(p.collection) !== ci(fCollection.value)) return false;
-    if (fPlace?.value      && normPlace(p.place) !== normPlace(fPlace.value)) return false;
-    if (fGenre?.value      && ci(p.genre)      !== ci(fGenre.value))      return false;
-    if (fYear?.value       && String(p.year)   !== String(fYear.value))   return false;
+    if (fModel?.value      && ci(fixModel(p.model)) !== ci(fModel.value)) return false;
+    if (fCollection?.value && ci(p.collection)      !== ci(fCollection.value)) return false;
+    if (fPlace?.value      && normPlace(p.place)    !== normPlace(fPlace.value)) return false;
+    if (fGenre?.value      && ci(p.genre)           !== ci(fGenre.value)) return false;
+    if (fYear?.value       && String(p.year)        !== String(fYear.value)) return false;
 
     return true;
   }
