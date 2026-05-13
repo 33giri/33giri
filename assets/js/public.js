@@ -43,14 +43,18 @@
     advanced?.classList.toggle("open");
   });
 
-  // ✅ FIX: deduplicazione case-insensitive — "Posacenere" e "posacenere" → un solo valore
-  function uniq(list) {
+  // ✅ FIX: deduplicazione case-insensitive.
+  // Se lowerCase=true il valore canonico è tutto minuscolo (usato per i modelli).
+  // Altrimenti prima lettera maiuscola (usato per gli altri filtri).
+  function uniq(list, lowerCase = false) {
     const map = new Map();
     list.filter(Boolean).forEach((v) => {
       const key = String(v).trim().toLowerCase();
       if (!map.has(key)) {
-        const s = String(v).trim();
-        map.set(key, s.charAt(0).toUpperCase() + s.slice(1));
+        const canonical = lowerCase
+          ? key
+          : key.charAt(0).toUpperCase() + key.slice(1);
+        map.set(key, canonical);
       }
     });
     return Array.from(map.values()).sort((a, b) =>
@@ -186,39 +190,39 @@
   }
 
   function populateFilters(products) {
-    const models = uniq(products.map((p) => p.model));
-    const cols = uniq(products.map((p) => p.collection));
+    // ✅ modelli: tutto minuscolo e deduplicati case-insensitive
+    const models = uniq(products.map((p) => p.model), true);
+    const cols   = uniq(products.map((p) => p.collection));
     const places = uniq(products.map((p) => p.place));
     const genres = uniq(products.map((p) => p.genre));
-    const years = uniq(products.map((p) => p.year)).sort((a, b) => Number(a) - Number(b));
+    const years  = uniq(products.map((p) => p.year)).sort((a, b) => Number(a) - Number(b));
 
-    fillSelectPreserve(fModel, models, "Modello");
-    fillSelectPreserve(fCollection, cols, "Collezione");
-    fillSelectPreserve(fPlace, places, "Città");
-    fillSelectPreserve(fGenre, genres, "Genere");
-    fillSelectPreserve(fYear, years, "Anno");
+    fillSelectPreserve(fModel,      models, "Modello");
+    fillSelectPreserve(fCollection, cols,   "Collezione");
+    fillSelectPreserve(fPlace,      places, "Città");
+    fillSelectPreserve(fGenre,      genres, "Genere");
+    fillSelectPreserve(fYear,       years,  "Anno");
   }
 
   function applyUrlParamsOnce() {
     const sp = new URLSearchParams(location.search);
 
-    const qParam = sp.get("q");
-    const genreParam = sp.get("genre");
-    const modelParam = sp.get("model");
+    const qParam          = sp.get("q");
+    const genreParam      = sp.get("genre");
+    const modelParam      = sp.get("model");
     const collectionParam = sp.get("collection");
-    const placeParam = sp.get("place");
-    const yearParam = sp.get("year");
+    const placeParam      = sp.get("place");
+    const yearParam       = sp.get("year");
 
     const hasAny = qParam || genreParam || modelParam || collectionParam || placeParam || yearParam;
     if (hasAny) advanced?.classList.add("open");
 
-    if (qParam && q) q.value = qParam;
-
-    if (genreParam && fGenre) fGenre.value = genreParam;
-    if (modelParam && fModel) fModel.value = modelParam;
+    if (qParam && q)                    q.value          = qParam;
+    if (genreParam && fGenre)           fGenre.value      = genreParam;
+    if (modelParam && fModel)           fModel.value      = modelParam;
     if (collectionParam && fCollection) fCollection.value = collectionParam;
-    if (placeParam && fPlace) fPlace.value = placeParam;
-    if (yearParam && fYear) fYear.value = yearParam;
+    if (placeParam && fPlace)           fPlace.value      = placeParam;
+    if (yearParam && fYear)             fYear.value       = yearParam;
   }
 
   // ✅ FIX: confronto case-insensitive per model, collection e genre
@@ -233,11 +237,11 @@
 
     const ci = (s) => String(s ?? "").trim().toLowerCase();
 
-    if (fModel?.value && ci(p.model) !== ci(fModel.value)) return false;
+    if (fModel?.value      && ci(p.model)      !== ci(fModel.value))      return false;
     if (fCollection?.value && ci(p.collection) !== ci(fCollection.value)) return false;
-    if (fPlace?.value && normPlace(p.place) !== normPlace(fPlace.value)) return false;
-    if (fGenre?.value && ci(p.genre) !== ci(fGenre.value)) return false;
-    if (fYear?.value && String(p.year) !== String(fYear.value)) return false;
+    if (fPlace?.value      && normPlace(p.place) !== normPlace(fPlace.value)) return false;
+    if (fGenre?.value      && ci(p.genre)      !== ci(fGenre.value))      return false;
+    if (fYear?.value       && String(p.year)   !== String(fYear.value))   return false;
 
     return true;
   }
