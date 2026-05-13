@@ -43,8 +43,17 @@
     advanced?.classList.toggle("open");
   });
 
+  // ✅ FIX: deduplicazione case-insensitive — "Posacenere" e "posacenere" → un solo valore
   function uniq(list) {
-    return Array.from(new Set(list.filter(Boolean))).sort((a, b) =>
+    const map = new Map();
+    list.filter(Boolean).forEach((v) => {
+      const key = String(v).trim().toLowerCase();
+      if (!map.has(key)) {
+        const s = String(v).trim();
+        map.set(key, s.charAt(0).toUpperCase() + s.slice(1));
+      }
+    });
+    return Array.from(map.values()).sort((a, b) =>
       String(a).localeCompare(String(b), "it")
     );
   }
@@ -212,6 +221,7 @@
     if (yearParam && fYear) fYear.value = yearParam;
   }
 
+  // ✅ FIX: confronto case-insensitive per model, collection e genre
   function matches(p) {
     if (p.soldAt) return false;
 
@@ -221,10 +231,12 @@
       if (!hay.includes(qs)) return false;
     }
 
-    if (fModel?.value && p.model !== fModel.value) return false;
-    if (fCollection?.value && p.collection !== fCollection.value) return false;
+    const ci = (s) => String(s ?? "").trim().toLowerCase();
+
+    if (fModel?.value && ci(p.model) !== ci(fModel.value)) return false;
+    if (fCollection?.value && ci(p.collection) !== ci(fCollection.value)) return false;
     if (fPlace?.value && normPlace(p.place) !== normPlace(fPlace.value)) return false;
-    if (fGenre?.value && p.genre !== fGenre.value) return false;
+    if (fGenre?.value && ci(p.genre) !== ci(fGenre.value)) return false;
     if (fYear?.value && String(p.year) !== String(fYear.value)) return false;
 
     return true;
